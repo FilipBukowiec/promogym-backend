@@ -8,6 +8,9 @@ import { NewsModule } from './news/news.module';
 import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AnnouncementModule } from './announcement/announcement.module';
+import { MediaModule } from './media/media.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ProfileModule,
     NewsModule,
     UserModule,
+    AnnouncementModule,
+    MediaModule,
+    SettingsModule,
   ],
   controllers: [AppController, ProfileController],
   providers: [AppService],
