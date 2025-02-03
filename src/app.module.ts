@@ -1,41 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { ProfileModule } from './profile/profile.module';
-import { ProfileController } from './profile/profile.controller';
-import { NewsModule } from './news/news.module';
-import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AnnouncementModule } from './announcement/announcement.module';
-import { MediaModule } from './media/media.module';
-import { SettingsModule } from './settings/settings.module';
+import { TenantModule } from './tenant/tenant.module';
+import { NewsModule } from './news/news.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,  // Umożliwia globalny dostęp do zmiennych środowiskowych
-    }),
+    ConfigModule.forRoot({ isGlobal: true }), // Ładowanie zmiennych środowiskowych
     MongooseModule.forRootAsync({
-      useFactory: async (configService: ConfigService) => {
-        const mongoUri = configService.get<string>('MONGODB_URI');
-        if (!mongoUri) {
-          throw new Error('MONGODB_URI is not defined in environment variables');
-        }
-        return { uri: mongoUri };
-      },
+      imports: [ConfigModule],
       inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
     }),
-    AuthModule,
-    ProfileModule,
+    TenantModule,
     NewsModule,
-    UserModule,
-    AnnouncementModule,
-    MediaModule,
-    SettingsModule,
+    AuthModule,
   ],
-  controllers: [AppController, ProfileController],
-  providers: [AppService],
 })
 export class AppModule {}

@@ -1,28 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { createRemoteJWKSet } from 'jose';
+import * as jwksRsa from 'jwks-rsa';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKeyProvider: createRemoteJWKSet(
-        new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)
-      ),
-      audience: process.env.AUTH0_AUDIENCE,
-      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+      ignoreExpiration: false,
+      audience: process.env.AUTH0_AUDIENCE,       // Dodaj audience
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`, // Dodaj issuer
       algorithms: ['RS256'],
+      secretOrKeyProvider: jwksRsa.passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
+      }),
     });
   }
 
   async validate(payload: any) {
+   
     return {
       userId: payload.sub,
+      tenantId: payload['https://promogym.com/api/tenantId'],
       email: payload.email,
-      roles: payload['https://example.com/roles'] || [],
-      tenantId: payload['tenant_id'],
     };
   }
 }
