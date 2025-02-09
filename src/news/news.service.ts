@@ -1,29 +1,44 @@
-// src/news/news.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { News, NewsDocument } from './news.schema';
 import { Model } from 'mongoose';
-import { News } from './news.schema';
 
 @Injectable()
 export class NewsService {
-  constructor(@InjectModel(News.name) private newsModel: Model<News>) {}
+  private readonly logger = new Logger(NewsService.name);
 
-  // Tworzenie nowej wiadomości
-  async createNews(order: number, content: string, tenantId: string): Promise<News> {
-    const newNews = new this.newsModel({ order, content, tenantId });
-    return newNews.save();
+  constructor(
+    @InjectModel(News.name) private newsModel: Model<NewsDocument>,
+  ) {}
+
+  // async getAllNews(): Promise<News[]> {
+  //   this.logger.debug('Fetching all news...');
+  //   try {
+  //     const news = await this.newsModel.find().exec(); // Pobranie danych
+  //     this.logger.log('Successfully fetched all news');
+  //     return news; // Zwrócenie pobranych danych
+  //   } catch (error) {
+  //     this.logger.error('Error while fetching news:', error.stack);
+  //     throw error; // Rzucenie błędu, jeśli coś poszło nie tak
+  //   }
+  // }
+   
+  async getAllNews(): Promise<News[]> {
+    try {
+      return await this.newsModel.find().exec();
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      throw error;  // Rzucenie błędu, jeśli coś poszło nie tak
+    }
   }
-
-  // Pobieranie wiadomości powiązanej z tenantId
-  async findByTenantId(tenantId: string): Promise<News[]> {
-    return this.newsModel.find({ tenantId }).exec();
-  }
-
-
-
   
-  // Pobieranie wszystkich wiadomości
-  async findAll(): Promise<News[]> {
-    return this.newsModel.find().exec();
+  async createNews(content: string, order: number ): Promise<News> {
+    try {
+      const newNews = new this.newsModel({ content, order, });
+      return await newNews.save();
+    } catch (error) {
+      console.error('Error creating news:', error);
+      throw new Error('Unable to create news');
+    }
   }
 }

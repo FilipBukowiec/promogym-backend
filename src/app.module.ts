@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TenantModule } from './tenant/tenant.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { NewsModule } from './news/news.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // Ładowanie zmiennych środowiskowych
+    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -15,9 +17,14 @@ import { AuthModule } from './auth/auth.module';
         uri: configService.get<string>('MONGODB_URI'),
       }),
     }),
-    TenantModule,
+    JwtModule.register({
+      secret: process.env.AUTH0_CLIENT_SECRET, // Lub użyj publicznego klucza Auth0
+      signOptions: { expiresIn: '1h' },  // Token ważny przez 1 godzinę
+    }),
     NewsModule,
     AuthModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

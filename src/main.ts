@@ -6,6 +6,15 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Konfiguracja CORS
+  app.enableCors({
+    origin: 'http://localhost:4200', // Front-end działa na porcie 4200
+    methods: 'GET, POST, PUT, DELETE', // Dozwolone metody
+    allowedHeaders: 'Content-Type, Authorization', // Dozwolone nagłówki
+  });
+
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
