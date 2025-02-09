@@ -9,9 +9,9 @@ async function bootstrap() {
 
   // Konfiguracja CORS
   app.enableCors({
-    origin: 'http://localhost:4200', // Front-end działa na porcie 4200
-    methods: 'GET, POST, PUT, DELETE', // Dozwolone metody
-    allowedHeaders: 'Content-Type, Authorization', // Dozwolone nagłówki
+    origin: 'http://localhost:4200', 
+    methods: 'GET, POST, PUT, DELETE', 
+    allowedHeaders: 'Content-Type, Authorization', 
   });
 
   await app.listen(process.env.PORT ?? 3000);

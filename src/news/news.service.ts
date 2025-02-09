@@ -31,6 +31,8 @@ export class NewsService {
       throw error;  // Rzucenie błędu, jeśli coś poszło nie tak
     }
   }
+
+
   
   async createNews(content: string, order: number ): Promise<News> {
     try {
