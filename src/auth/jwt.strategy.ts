@@ -9,20 +9,31 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
+    const jwksUri = configService.get<string>('JWT_SECRET_KEY_PROVIDER_URI');
+    const audience = configService.get<string>('JWT_AUDIENCE');
+    const issuer = configService.get<string>('JWT_ISSUER');
+
+    if (!jwksUri || !audience || !issuer) {
+      throw new HttpException('Missing environment variables', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKeyProvider: jwksRsa.passportJwtSecret({
-        jwksUri: 'https://dev-yaku6y1r82y6pb0p.us.auth0.com/.well-known/jwks.json',
+        jwksUri: jwksUri,  // Teraz mamy pewność, że jest to string
       }),
       algorithms: ['RS256'],
-      audience: 'https://promogym.com/api', // Twój API Audience
-      issuer: 'https://dev-yaku6y1r82y6pb0p.us.auth0.com/', // Twoja domena Auth0
+      audience: audience,  // Przekazujemy odpowiednią wartość
+      issuer: issuer,  // Przekazujemy odpowiednią wartość
     });
   }
 
   async validate(payload: any) {
-    const validAudiences = ['https://promogym.com/api', 'https://dev-yaku6y1r82y6pb0p.us.auth0.com/userinfo'];
-    const expectedIssuer = 'https://dev-yaku6y1r82y6pb0p.us.auth0.com/';
+    const validAudiences = [
+      this.configService.get<string>('JWT_AUDIENCE'),
+      this.configService.get<string>('JWT_USERINFO_URL'),,
+    ];
+    const expectedIssuer = this.configService.get<string>('JWT_ISSUER');
   
     // Sprawdzamy, czy token ma odpowiednią audience
     if (!validAudiences.includes(payload.aud[0])) {  // Zakładam, że aud jest tablicą
