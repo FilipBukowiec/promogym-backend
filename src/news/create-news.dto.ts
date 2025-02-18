@@ -1,4 +1,5 @@
 export class CreateNewsDto {
-    content: string;
-    order: number;
-  }
+  readonly tenant_id: string; 
+  readonly content: string;
+  readonly order: number;
+}
