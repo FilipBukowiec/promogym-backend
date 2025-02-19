@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { NewsModule } from './news/news.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     NewsModule,
     AuthModule,
     UserModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
