@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Media } from './media.model';
 import { CreateMediaDto } from './create-media.dto';
 
@@ -8,7 +10,7 @@ import { CreateMediaDto } from './create-media.dto';
 export class MediaService {
   constructor(@InjectModel(Media.name) private mediaModel: Model<Media>) {}
 
-  // Przesyłanie nowego pliku
+  // 📌 Przesyłanie nowego pliku
   async upload(createMediaDto: CreateMediaDto): Promise<Media> {
     await this.mediaModel.updateMany(
       { tenant_id: createMediaDto.tenant_id, order: { $gte: 1 } },
@@ -19,75 +21,77 @@ export class MediaService {
     return newMedia.save();
   }
 
-  // Pobieranie mediów dla danego tenant_id
-  async findByTenant(tenant_id: string): Promise<Media[]> {
-    return this.mediaModel.find({ tenant_id }).sort({ order: 1 }).lean();
+  // 📌 Pobieranie listy plików
+  async getAll(): Promise<Media[]> {
+    return this.mediaModel.find().sort({ order: 1 }).exec();
   }
 
-  // Usuwanie mediów i przesuwanie kolejności
-  async deleteMedia(id: string, tenant_id: string): Promise<void> {
-    const mediaToDelete = await this.mediaModel.findOneAndDelete({ _id: id, tenant_id });
-    if (!mediaToDelete) {
-      throw new NotFoundException('Media not found');
+  // 📌 Usuwanie pliku
+  async delete(id: string): Promise<Media[]> {
+    const media = await this.mediaModel.findById(id);
+    if (!media) {
+      throw new NotFoundException('Plik nie znaleziony');
     }
-
+  
+    const filePath = path.join(__dirname, '..', '..', 'public_html', media.filePath);
+  
+    try {
+      await fs.promises.unlink(filePath); // Usuwamy plik synchronicznie
+    } catch (err) {
+      throw new InternalServerErrorException('Nie udało się usunąć pliku');
+    }
+  
+    // Usuwamy media
+    await this.mediaModel.findByIdAndDelete(id);
+  
+    // Przesuwamy pozostałe media o jeden w dół
     await this.mediaModel.updateMany(
-      { tenant_id, order: { $gt: mediaToDelete.order } },
-      { $inc: { order: -1 } }
+      { order: { $gt: media.order } }, // Wybieramy media z wyższym orderem
+      { $inc: { order: -1 } } // Zmniejszamy order o 1
     );
+  
+    // Pobieramy zaktualizowaną listę mediów
+    return this.mediaModel.find().sort({ order: 1 }).exec();
+  }
+  
+  
+  
+
+  // 📌 Przesuwanie pliku w górę
+  async moveUp(id: string): Promise<void> {
+    const media = await this.mediaModel.findById(id);
+    if (!media) throw new NotFoundException('Media nie znalezione');
+
+    const previous = await this.mediaModel.findOne({ order: media.order - 1 });
+    if (!previous) throw new NotFoundException('Media są już na najwyższej pozycji');
+
+    await this.mediaModel.bulkWrite([
+      { updateOne: { filter: { _id: media._id }, update: { order: media.order - 1 } } },
+      { updateOne: { filter: { _id: previous._id }, update: { order: previous.order + 1 } } },
+    ]);
   }
 
-  // Przesuwanie w górę
-  async moveUp(id: string, tenant_id: string): Promise<void> {
-    const session = await this.mediaModel.db.startSession();
-    session.startTransaction();
+  // 📌 Przesuwanie pliku w dół
+  async moveDown(id: string): Promise<void> {
+    const media = await this.mediaModel.findById(id);
+    if (!media) throw new NotFoundException('Media nie znalezione');
 
-    try {
-      const currentMedia = await this.mediaModel.findOne({ _id: id, tenant_id }).session(session);
-      if (!currentMedia) throw new NotFoundException('Media not found');
+    const next = await this.mediaModel.findOne({ order: media.order + 1 });
+    if (!next) throw new NotFoundException('Media są już na najniższej pozycji');
 
-      const aboveMedia = await this.mediaModel.findOne({
-        tenant_id,
-        order: currentMedia.order - 1
-      }).session(session);
-      if (!aboveMedia) throw new Error('Already at the top');
-
-      await this.mediaModel.updateOne({ _id: currentMedia._id }, { order: currentMedia.order - 1 }).session(session);
-      await this.mediaModel.updateOne({ _id: aboveMedia._id }, { order: aboveMedia.order + 1 }).session(session);
-
-      await session.commitTransaction();
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    await this.mediaModel.bulkWrite([
+      { updateOne: { filter: { _id: media._id }, update: { order: media.order + 1 } } },
+      { updateOne: { filter: { _id: next._id }, update: { order: next.order - 1 } } },
+    ]);
   }
 
-  // Przesuwanie w dół
-  async moveDown(id: string, tenant_id: string): Promise<void> {
-    const session = await this.mediaModel.db.startSession();
-    session.startTransaction();
+  // 📌 Aktualizacja kolejności `order`
+  private async updateOrders() {
+    const allMedia = await this.mediaModel.find().sort({ order: 1 });
+    const updates = allMedia.map((media, index) => ({
+      updateOne: { filter: { _id: media._id }, update: { order: index + 1 } },
+    }));
 
-    try {
-      const currentMedia = await this.mediaModel.findOne({ _id: id, tenant_id }).session(session);
-      if (!currentMedia) throw new NotFoundException('Media not found');
-
-      const belowMedia = await this.mediaModel.findOne({
-        tenant_id,
-        order: currentMedia.order + 1
-      }).session(session);
-      if (!belowMedia) throw new Error('Already at the bottom');
-
-      await this.mediaModel.updateOne({ _id: currentMedia._id }, { order: currentMedia.order + 1 }).session(session);
-      await this.mediaModel.updateOne({ _id: belowMedia._id }, { order: belowMedia.order - 1 }).session(session);
-
-      await session.commitTransaction();
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    await this.mediaModel.bulkWrite(updates);
   }
 }
