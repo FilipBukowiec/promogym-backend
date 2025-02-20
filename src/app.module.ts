@@ -8,6 +8,8 @@ import { NewsModule } from './news/news.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { MediaModule } from './media/media.module';
+import { AnnouncementModule } from './announcement/announcement.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { MediaModule } from './media/media.module';
     AuthModule,
     UserModule,
     MediaModule,
+    AnnouncementModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
