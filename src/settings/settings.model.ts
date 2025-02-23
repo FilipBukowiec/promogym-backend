@@ -3,28 +3,55 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Settings extends Document {
+  @Prop({ required: true })
+  tenant_id: string; // Nowe pole tenant_id
+
+  @Prop({ required: true })
+  name: string; // Nazwa ustawień
+
+  @Prop({
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+      default: [0, 0],
+    },
+  })
+  location: {
+    type: 'Point';
+    coordinates: [number, number]; // longitude, latitude
+  };
+
   @Prop({ required: false })
   selectedRadioStream: string;
 
-  @Prop({ type: [{ url: { type: String, required: true }, description: { type: String, required: true } }] })
-  radioStreamList: { url: string, description: string }[];
+  @Prop({
+    type: [
+      {
+        url: { type: String, required: true },
+        description: { type: String, required: true },
+      },
+    ],
+  })
+  radioStreamList: { url: string; description: string }[];
 
-  @Prop({ 
+  @Prop({
     type: [
       {
         startMinute: { type: Number, required: true },
         endMinute: { type: Number, required: true },
-      }
-    ], 
-    default: [], 
+      },
+    ],
+    default: [],
   })
-  footerVisibilityRules: { startMinute: number, endMinute: number }[];
+  footerVisibilityRules: { startMinute: number; endMinute: number }[];
 
   @Prop({ required: true })
   pictureSlideDuration: number;
-
-  @Prop({ required: true })
-  tenant_id: string;  // Nowe pole tenant_id
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);

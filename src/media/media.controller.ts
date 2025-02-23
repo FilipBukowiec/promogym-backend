@@ -1,4 +1,15 @@
-import { Controller, Post, Delete, Get, Put, Param, UseInterceptors, UploadedFile, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Put,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+  Headers,
+  UseGuards,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as fs from 'fs';
@@ -17,16 +28,22 @@ export class MediaController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, file, cb) => {
+        // Sprawdzanie tenant-id tylko w tym miejscu, a nie w metodzie uploadFile
         const tenantId = req.headers['tenant-id'] as string;
+
         if (!tenantId) {
-          return cb(new Error('Tenant ID is required'), path.join(__dirname));
+          // Przekazanie dwóch argumentów do cb: error i pusty string jako destination
+          return cb(new Error('Tenant ID is required'), '');
         }
 
         const uploadPath = path.join(__dirname, "..", "..", "public_html", "uploads", "media", tenantId);
+        
+        // Tworzenie folderu jeśli nie istnieje
         if (!fs.existsSync(uploadPath)) {
           fs.mkdirSync(uploadPath, { recursive: true });
         }
 
+        // Przesyłanie pliku do odpowiedniego folderu
         cb(null, uploadPath);
       },
       filename: (req, file, cb) => {
@@ -35,10 +52,7 @@ export class MediaController {
     }),
   }))
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Headers('tenant-id') tenant_id: string) {
-    if (!tenant_id) {
-      throw new Error('Tenant ID is required');
-    }
-
+    // Teraz nie musimy sprawdzać tenant-id, bo zostało to już zrobione w destination
     const createMediaDto: CreateMediaDto = {
       fileName: file.filename,
       filePath: `uploads/media/${tenant_id}/${file.filename}`,
@@ -51,31 +65,43 @@ export class MediaController {
 
   // 📌 Pobieranie listy plików (Publiczny, bez JWT)
   @Get()
-  async getAll() {
-    return this.mediaService.getAll();
+  async getAll(@Headers('tenant-id') tenant_id: string) {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.mediaService.getAll(tenant_id);
   }
 
   // 📌 Usuwanie pliku (JWT Guard)
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  async delete(@Param('id') id: string) {
-    await this.mediaService.delete(id);
+  async delete(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    await this.mediaService.delete(id, tenant_id);
     return { message: 'Media usunięte pomyślnie' };
   }
 
   // 📌 Przesunięcie pliku w górę (JWT Guard)
   @Put('move-up/:id')
   @UseGuards(AuthGuard('jwt'))
-  async moveUp(@Param('id') id: string) {
-    await this.mediaService.moveUp(id);
+  async moveUp(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    await this.mediaService.moveUp(id, tenant_id);
     return { message: 'Media przesunięte w górę pomyślnie' };
   }
 
   // 📌 Przesunięcie pliku w dół (JWT Guard)
   @Put('move-down/:id')
   @UseGuards(AuthGuard('jwt'))
-  async moveDown(@Param('id') id: string) {
-    await this.mediaService.moveDown(id);
+  async moveDown(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    await this.mediaService.moveDown(id, tenant_id);
     return { message: 'Media przesunięte w dół pomyślnie' };
   }
 }

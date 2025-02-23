@@ -9,26 +9,36 @@ import { Settings } from './settings.model';
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
-  // Tworzenie nowych ustawień dla danego tenanta (z ochroną)
+  // Pobieranie ustawień dla danego tenanta
   @UseGuards(AuthGuard('jwt'))
-  @Post(':id')
-  async create(@Param('id') id: string, @Body() createSettingsDto: CreateSettingsDto) {
-    return this.settingsService.createSettingsForTenant(id, createSettingsDto); 
+  @Get()
+  async getSettings(@Headers('tenant-id') tenant_id: string): Promise<Settings> {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.settingsService.getSettingsForTenant(tenant_id);
   }
 
-  // Pobieranie ustawień dla danego tenanta
-  @Get(':id')
-  async getSettings(@Param('id') id: string): Promise<Settings> {
-    return this.settingsService.getSettingsForTenant(id);
+  // Tworzenie domyślnych ustawień dla danego tenanta
+  @UseGuards(AuthGuard('jwt'))
+  @Post()
+  async createDefaultSettings(@Headers('tenant-id') tenant_id: string): Promise<Settings> {
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.settingsService.createDefaultSettings(tenant_id);
   }
 
   // Aktualizacja ustawień dla danego tenanta
   @UseGuards(AuthGuard('jwt'))
-  @Put(':id')
+  @Put()
   async updateSettings(
-    @Param('id') id: string,
     @Body() updateSettingsDto: UpdateSettingsDto,
+    @Headers('tenant-id') tenant_id: string,
   ): Promise<Settings> {
-    return this.settingsService.updateSettingsForTenant(id, updateSettingsDto);
+    if (!tenant_id) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.settingsService.updateSettingsForTenant(tenant_id, updateSettingsDto);
   }
 }
