@@ -2,9 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class Settings extends Document {
+export class UserSettings extends Document {
   @Prop({ required: true })
   tenant_id: string; // Nowe pole tenant_id
+
+  @Prop({required: true  })
+  language: string;
 
   @Prop({ required: true })
   name: string; // Nazwa ustawień
@@ -54,4 +57,4 @@ export class Settings extends Document {
   pictureSlideDuration: number;
 }
 
-export const SettingsSchema = SchemaFactory.createForClass(Settings);
+export const SettingsSchema = SchemaFactory.createForClass(UserSettings);

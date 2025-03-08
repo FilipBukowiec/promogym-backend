@@ -1,36 +1,37 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Settings } from './settings.model';
-import { CreateSettingsDto } from './create-settings.dto';
-import { UpdateSettingsDto } from './update-settings.dto';
+import { UserSettings } from './user-settings.model';
+import { CreateUserSettingsDto } from './create-user-settings.dto';
+import { UpdateUserSettingsDto } from './update-user-settings.dto';
 
 @Injectable()
-export class SettingsService {
+export class UserSettingsService {
   constructor(
-    @InjectModel(Settings.name) private settingsModel: Model<Settings>,
+    @InjectModel(UserSettings.name) private settingsModel: Model<UserSettings>,
   ) {}
 
   // Pobieranie ustawień dla danego tenant_id
-  async getSettingsForTenant(tenant_id: string): Promise<Settings> {
-    console.log('Pobieram ustawienia dla tenant_id:', tenant_id);  // Logowanie tenant_id
-    
+  async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
+    console.log('Pobieram ustawienia dla tenant_id:', tenant_id); // Logowanie tenant_id
+
     // Szukamy ustawień dla danego tenant_id
     const settings = await this.settingsModel.findOne({ tenant_id }).exec();
-  
+
     if (!settings) {
-      console.log(`Nie znaleziono ustawień dla tenant_id: ${tenant_id}`);  // Logowanie w przypadku, gdy nie znaleziono ustawień
+      console.log(`Nie znaleziono ustawień dla tenant_id: ${tenant_id}`); // Logowanie w przypadku, gdy nie znaleziono ustawień
       throw new NotFoundException('Settings not found');
     }
-  
-    console.log(`Znaleziono ustawienia dla tenant_id: ${tenant_id}`, settings);  // Logowanie znalezionych ustawień
-  
+
+    console.log(`Znaleziono ustawienia dla tenant_id: ${tenant_id}`, settings); // Logowanie znalezionych ustawień
+
     return settings;
   }
   // Tworzenie nowych ustawień dla danego tenant_id
-  async createDefaultSettings(tenant_id: string): Promise<Settings> {
-    const defaultSettings: CreateSettingsDto = {
+  async createDefaultSettings(tenant_id: string): Promise<UserSettings> {
+    const defaultSettings: CreateUserSettingsDto = {
       tenant_id,
+      language: 'ENG',
       name: tenant_id,
       selectedRadioStream: '',
       radioStreamList: [],
@@ -47,15 +48,16 @@ export class SettingsService {
   // Aktualizacja ustawień
   async updateSettingsForTenant(
     tenant_id: string,
-    updateSettingsDto: UpdateSettingsDto,
-  ): Promise<Settings> {
+    updateSettingsDto: UpdateUserSettingsDto,
+  ): Promise<UserSettings> {
     const settings = await this.settingsModel.findOne({ tenant_id }).exec();
 
     if (!settings) {
       throw new NotFoundException('Settings not found');
     }
-
+    settings.language = updateSettingsDto.language ?? settings.language;
     settings.name = updateSettingsDto.name ?? settings.name;
+
     settings.location = updateSettingsDto.location ?? settings.location;
     settings.selectedRadioStream =
       updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;

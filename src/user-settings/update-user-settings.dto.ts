@@ -16,10 +16,14 @@ class LocationDto {
   coordinates: [number, number];
 }
 
-export class UpdateSettingsDto {
+export class UpdateUserSettingsDto {
   @IsOptional()
   @IsString()
   tenant_id?: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
 
   @IsOptional()
   @IsString()

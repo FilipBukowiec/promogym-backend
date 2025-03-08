@@ -10,9 +10,12 @@ class LocationDto {
   coordinates: [number, number]; // longitude, latitude
 }
 
-export class CreateSettingsDto {
+export class CreateUserSettingsDto {
   @IsString()
   tenant_id: string; // Tenant ID jest wymagany
+
+  @IsString()
+  language: string;
 
   @IsString()
   name: string; // Name jest wymagane

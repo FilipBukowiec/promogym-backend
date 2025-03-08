@@ -11,7 +11,7 @@ export class Media extends Document {
 
   @Prop({ required: true })
   fileType: string;
-
+ 
   @Prop({ required: true })
   order: number;
 
