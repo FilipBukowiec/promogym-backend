@@ -8,7 +8,7 @@ import { UpdateUserSettingsDto } from './update-user-settings.dto';
 @Injectable()
 export class UserSettingsService {
   constructor(
-    @InjectModel(UserSettings.name) private settingsModel: Model<UserSettings>,
+    @InjectModel(UserSettings.name) private userSettingsModel: Model<UserSettings>,
   ) {}
 
   // Pobieranie ustawień dla danego tenant_id
@@ -16,7 +16,7 @@ export class UserSettingsService {
     console.log('Pobieram ustawienia dla tenant_id:', tenant_id); // Logowanie tenant_id
 
     // Szukamy ustawień dla danego tenant_id
-    const settings = await this.settingsModel.findOne({ tenant_id }).exec();
+    const settings = await this.userSettingsModel.findOne({ tenant_id }).exec();
 
     if (!settings) {
       console.log(`Nie znaleziono ustawień dla tenant_id: ${tenant_id}`); // Logowanie w przypadku, gdy nie znaleziono ustawień
@@ -40,7 +40,7 @@ export class UserSettingsService {
       location: { type: 'Point', coordinates: [0, 0] },
     };
 
-    const settings = new this.settingsModel(defaultSettings);
+    const settings = new this.userSettingsModel(defaultSettings);
     await settings.save();
     return settings;
   }
@@ -50,7 +50,7 @@ export class UserSettingsService {
     tenant_id: string,
     updateSettingsDto: UpdateUserSettingsDto,
   ): Promise<UserSettings> {
-    const settings = await this.settingsModel.findOne({ tenant_id }).exec();
+    const settings = await this.userSettingsModel.findOne({ tenant_id }).exec();
 
     if (!settings) {
       throw new NotFoundException('Settings not found');

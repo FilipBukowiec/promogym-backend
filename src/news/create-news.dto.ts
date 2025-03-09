@@ -1,5 +1,12 @@
+import { IsString, IsNumber } from 'class-validator';
+
 export class CreateNewsDto {
-  readonly tenant_id: string; 
+  @IsString()
+  readonly tenant_id: string;
+
+  @IsString()
   readonly content: string;
+
+  @IsNumber()
   readonly order: number;
 }

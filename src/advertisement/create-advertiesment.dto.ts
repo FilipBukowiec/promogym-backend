@@ -1,9 +1,6 @@
 import { IsString } from 'class-validator';
 
-export class CreateMediaDto {
-  @IsString()
-  readonly tenant_id: string;
-
+export class CreateAdvertisementDto {
   @IsString()
   readonly fileName: string;
 
@@ -12,6 +9,4 @@ export class CreateMediaDto {
 
   @IsString()
   readonly fileType: string;
-
-
 }

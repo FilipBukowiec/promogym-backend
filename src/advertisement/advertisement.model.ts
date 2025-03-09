@@ -14,8 +14,8 @@ filetype:string;
 @Prop({required: true})
 order: number;
 
-@Prop({required: true})
-language: string;
+@Prop({required: true, type: [String]})
+languages: string[];
 
 }
 
