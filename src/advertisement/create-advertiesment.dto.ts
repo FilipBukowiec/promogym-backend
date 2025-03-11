@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsArray } from 'class-validator';
 
 export class CreateAdvertisementDto {
   @IsString()
@@ -9,4 +9,8 @@ export class CreateAdvertisementDto {
 
   @IsString()
   readonly fileType: string;
+
+  @IsArray()
+  @IsString({each:true})
+  readonly languages: string[];
 }
