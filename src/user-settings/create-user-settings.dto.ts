@@ -20,6 +20,9 @@ export class CreateUserSettingsDto {
   @IsString()
   name: string; // Name jest wymagane
 
+  @IsString()
+  country: string;
+
   @IsOptional()
   @ValidateNested()
   @Type(() => LocationDto)

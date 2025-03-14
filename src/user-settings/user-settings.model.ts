@@ -6,8 +6,11 @@ export class UserSettings extends Document {
   @Prop({ required: true })
   tenant_id: string; // Nowe pole tenant_id
 
-  @Prop({required: true  })
+  @Prop({ required: true })
   language: string;
+
+  @Prop({ required: true })
+  country: string;
 
   @Prop({ required: true })
   name: string; // Nazwa ustawień

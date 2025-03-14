@@ -27,6 +27,10 @@ export class UpdateUserSettingsDto {
 
   @IsOptional()
   @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
   name?: string;
 
   @IsOptional()

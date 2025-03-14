@@ -13,7 +13,7 @@ async function bootstrap() {
   app.enableCors({
     origin: 'http://localhost:4200', 
     methods: 'GET, POST, PUT, DELETE', 
-    allowedHeaders: 'Content-Type, Authorization, tenant-id'
+    allowedHeaders: 'Content-Type, Authorization, tenant-id, country'
   });
 
   app.use('/uploads', express.static(join(__dirname, '..', 'public_html', 'uploads')));

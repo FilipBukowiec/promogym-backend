@@ -6,7 +6,7 @@ import {
 import { Advertisement } from './advertisement.model';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateAdvertisementDto } from './create-advertiesment.dto';
+import { CreateAdvertisementDto } from './create-advertisement.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -17,62 +17,59 @@ export class AdvertisementService {
     private advertisementModel: Model<Advertisement>,
   ) {}
 
-  async upload(
-    createAdvertisementDto: CreateAdvertisementDto,
-  ): Promise<Advertisement> {
+  async upload(createAdvertisementDto: CreateAdvertisementDto): Promise<Advertisement> {
     await this.advertisementModel.updateMany(
       { order: { $gte: 1 } },
       { $inc: { order: 1 } },
     );
+    
     const newAdvertisement = new this.advertisementModel({
       ...createAdvertisementDto,
       order: 1,
     });
+
     return newAdvertisement.save();
   }
 
-  async getAll(language?:string): Promise<Advertisement[]> {
+  async getAll(country?: string): Promise<Advertisement[]> {
+    if (country) {
+      return this.advertisementModel.find({ countries: country }).sort({ order: 1 }).exec();
+    } else {
+      return this.advertisementModel.find().sort({ order: 1 }).exec();
+    }
+  }
 
-    if(language){
-    return this.advertisementModel.find({languages:language}).sort({ order: 1 }).exec();
-     } else{
-        return this.advertisementModel.find().sort({order:1}).exec();
-     } }
-
-  async getByLanguage(language: string): Promise<Advertisement[]> {
+  async getByCountry(country: string): Promise<Advertisement[]> {
     return this.advertisementModel
-      .find({ languages: language })
+      .find({ countries: country })
       .sort({ order: 1 })
       .exec();
   }
 
   async delete(id: string): Promise<Advertisement[]> {
     const ad = await this.advertisementModel.findById(id);
-    if (!ad) throw new NotFoundException('Ogłosznie nie znalezione');
+    if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
 
-    const filePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'publi_html',
-      ad.filePath,
-    );
+    const filePath = path.join(__dirname, '..', '..', 'public_html', ad.filePath);
 
     try {
-      await fs.promises.unlink(filePath);
+      if (fs.existsSync(filePath)) {
+        await fs.promises.unlink(filePath);
+      }
     } catch (err) {
-      throw new InternalServerErrorException('Nie udało się usunąć pliku');
+      console.error('Błąd przy usuwaniu pliku:', err);
     }
-    await this.advertisementModel.findByIdAndUpdate(id);
+
+    await this.advertisementModel.findByIdAndDelete(id);
 
     await this.advertisementModel.updateMany(
       { order: { $gt: ad.order } },
       { $inc: { order: -1 } },
     );
+
     return this.advertisementModel.find().sort({ order: 1 }).exec();
   }
 
-  
   async moveUp(id: string): Promise<void> {
     const ad = await this.advertisementModel.findById(id);
     if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
@@ -86,7 +83,6 @@ export class AdvertisementService {
     ]);
   }
 
-  // 📌 Przesuwanie ogłoszenia w dół
   async moveDown(id: string): Promise<void> {
     const ad = await this.advertisementModel.findById(id);
     if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
@@ -100,7 +96,6 @@ export class AdvertisementService {
     ]);
   }
 
-  // 📌 Aktualizacja kolejności `order`
   private async updateOrders() {
     const allAds = await this.advertisementModel.find().sort({ order: 1 });
     const updates = allAds.map((ad, index) => ({
@@ -109,6 +104,4 @@ export class AdvertisementService {
 
     await this.advertisementModel.bulkWrite(updates);
   }
-
-
 }

@@ -16,7 +16,7 @@ import {
   import * as path from 'path';
   import { AdvertisementService } from './advertisement.service';
   import { AuthGuard } from '@nestjs/passport'; // JWT Guard
-import { CreateAdvertisementDto } from './create-advertiesment.dto';
+import { CreateAdvertisementDto } from './create-advertisement.dto';
   
   @Controller('advertisement')
   export class AdvertisementController {
@@ -29,38 +29,44 @@ import { CreateAdvertisementDto } from './create-advertiesment.dto';
       storage: diskStorage({
         destination: (req, file, cb) => {
           const uploadPath = path.join(__dirname, "..", "..", "public_html", "uploads", "advertisements");
-  
+    
           // Tworzenie folderu, jeśli nie istnieje
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
-  
+    
           cb(null, uploadPath);
         },
         filename: (req, file, cb) => {
-          cb(null, file.originalname);
+          // Generujemy unikalną nazwę pliku, aby uniknąć kolizji
+          const uniqueName = `${Date.now()}-${file.originalname}`;
+          cb(null, uniqueName);
         },
       }),
     }))
-    async uploadFile(@UploadedFile() file: Express.Multer.File, @Body() body: { languages: string[] }) {
-      if (!body.languages || body.languages.length === 0) {
-        throw new Error('At least one language is required');
+    async uploadFile(@UploadedFile() file: Express.Multer.File, @Body() body: CreateAdvertisementDto) {
+      // Sprawdzamy, czy kraje zostały przekazane
+      if (!body.countries || body.countries.length === 0) {
+        throw new Error('At least one country is required');
       }
-  
+    
+      // Tworzymy DTO do wysłania do serwisu
       const createAdvertisementDto: CreateAdvertisementDto = {
-        fileName: file.filename,
-        filePath: `uploads/advertisements/${file.filename}`,
-        fileType: file.mimetype,
-        languages: body.languages,
+        fileName: file.filename,      // Nazwa pliku
+        filePath: `uploads/advertisements/${file.filename}`,  // Ścieżka pliku
+        fileType: file.mimetype,      // Typ pliku (np. 'image/jpeg')
+        countries: body.countries,    // Przesyłamy wybrane kraje
       };
-  
+    
+      // Przekazujemy DTO do serwisu
       return this.advertisementService.upload(createAdvertisementDto);
     }
-  
+
+    
     // 📌 Pobieranie listy ogłoszeń dla danego języka (Publiczny, bez JWT)
-    @Get(':language')
-    async getAll(@Param('language') language: string) {
-      return this.advertisementService.getAll(language);
+    @Get(':country')
+    async getAll(@Param('country') country: string) {
+      return this.advertisementService.getAll(country);
     }
   
     // 📌 Usuwanie ogłoszenia (JWT Guard)

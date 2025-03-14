@@ -8,7 +8,8 @@ import { UpdateUserSettingsDto } from './update-user-settings.dto';
 @Injectable()
 export class UserSettingsService {
   constructor(
-    @InjectModel(UserSettings.name) private userSettingsModel: Model<UserSettings>,
+    @InjectModel(UserSettings.name)
+    private userSettingsModel: Model<UserSettings>,
   ) {}
 
   // Pobieranie ustawień dla danego tenant_id
@@ -28,15 +29,19 @@ export class UserSettingsService {
     return settings;
   }
   // Tworzenie nowych ustawień dla danego tenant_id
-  async createDefaultSettings(tenant_id: string): Promise<UserSettings> {
+  async createDefaultSettings(
+    tenant_id: string,
+    country: string,
+  ): Promise<UserSettings> {
     const defaultSettings: CreateUserSettingsDto = {
       tenant_id,
       language: 'ENG',
+      country: country,
       name: tenant_id,
       selectedRadioStream: '',
       radioStreamList: [],
       footerVisibilityRules: [],
-      pictureSlideDuration: 5,
+      pictureSlideDuration: 15,
       location: { type: 'Point', coordinates: [0, 0] },
     };
 
@@ -48,16 +53,19 @@ export class UserSettingsService {
   // Aktualizacja ustawień
   async updateSettingsForTenant(
     tenant_id: string,
+    country: string,
     updateSettingsDto: UpdateUserSettingsDto,
   ): Promise<UserSettings> {
     const settings = await this.userSettingsModel.findOne({ tenant_id }).exec();
-
     if (!settings) {
       throw new NotFoundException('Settings not found');
     }
-    settings.language = updateSettingsDto.language ?? settings.language;
-    settings.name = updateSettingsDto.name ?? settings.name;
 
+    console.log('Aktualne ustawienia:', settings);
+
+    settings.language = updateSettingsDto.language ?? settings.language;
+    settings.country = updateSettingsDto.country ?? settings.country;
+    settings.name = updateSettingsDto.name ?? settings.name;
     settings.location = updateSettingsDto.location ?? settings.location;
     settings.selectedRadioStream =
       updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
@@ -67,6 +75,10 @@ export class UserSettingsService {
       updateSettingsDto.footerVisibilityRules ?? settings.footerVisibilityRules;
     settings.pictureSlideDuration =
       updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;
+
+    settings.country = country || settings.country;
+
+    console.log('Nowe ustawienie country:', settings.country);
 
     await settings.save();
     return settings;
