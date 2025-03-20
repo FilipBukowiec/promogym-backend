@@ -46,15 +46,10 @@ export class UpdateUserSettingsDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => Object)
-  radioStreamList?: { url: string; description: string }[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Object)
   footerVisibilityRules?: { startMinute: number; endMinute: number }[];
 
   @IsOptional()
   @IsNumber()
   pictureSlideDuration?: number;
 }
+ 

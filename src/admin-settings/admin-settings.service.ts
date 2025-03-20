@@ -30,12 +30,7 @@ export class AdminSettingsService {
     return settings;
   }
 
-
-
-
-  async createSettings(
-    
-  ): Promise<AdminSettings> {
+  async createSettings(): Promise<AdminSettings> {
     console.log('🔍 Tworzenie nowych ustawień admina');
 
     // Sprawdzamy, czy już istnieją jakieś ustawienia
@@ -47,9 +42,9 @@ export class AdminSettingsService {
 
     // Tworzymy nowe ustawienia na podstawie DTO
     const defaultSettings: CreateAdminSettingsDto = {
-      languages:  ['PL', 'ENG'], // Domyślnie PL i ENG
-      countries:  ['Poland'],   // Domyślnie Polska
-      radioStreamList:  [], // Domyślnie pusta lista
+      languages: ['PL', 'ENG'], // Domyślnie PL i ENG
+      countries: ['Poland'], // Domyślnie Polska
+      radioStreamList: [], // Domyślnie pusta lista
     };
 
     // Tworzymy nowe ustawienia w bazie danych
@@ -57,29 +52,33 @@ export class AdminSettingsService {
     return await newSettings.save();
   }
 
-
-
-
-
-  
-  async updateSettings(
-    updateSettingsDto: UpdateAdminSettingsDto,
-  ): Promise<AdminSettings> {
+  async updateSettings(updateSettingsDto: UpdateAdminSettingsDto): Promise<AdminSettings> {
     console.log('🔍 Aktualizowanie ustawień admina');
 
     // Szukamy istniejących ustawień
     const settings = await this.adminSettingsModel.findOne().exec();
     if (!settings) {
-      throw new NotFoundException('Settings not found');
+        throw new NotFoundException('Settings not found');
     }
 
     console.log('🔍 Aktualne ustawienia:', settings);
 
-    // Zaktualizowanie ustawień
-    Object.assign(settings, updateSettingsDto);
+    // 🔹 Sortujemy tablice, jeśli są przekazane
+    settings.languages = updateSettingsDto.languages 
+        ? [...updateSettingsDto.languages].sort() 
+        : settings.languages;
+
+    settings.countries = updateSettingsDto.countries 
+        ? [...updateSettingsDto.countries].sort() 
+        : settings.countries;
+
+    settings.radioStreamList = updateSettingsDto.radioStreamList ?? settings.radioStreamList;
+
+    // Zapisujemy zmiany w bazie
     const updatedSettings = await settings.save();
 
     console.log('✅ Zaktualizowane ustawienia:', updatedSettings);
     return updatedSettings;
-  }
+}
+
 }

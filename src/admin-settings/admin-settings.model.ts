@@ -5,7 +5,7 @@ import { Document } from 'mongoose';
 class RadioStream {
   @Prop({ required: true })
   url: string;
-  @Prop({ required: true })
+  @Prop({ required: true })  
   description: string;
 }
 

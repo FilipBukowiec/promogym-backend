@@ -62,7 +62,6 @@ export class AdminSettingsController {
     return this.settingsService.createSettings();
   }
 
-
   @UseGuards(AuthGuard('jwt'))
   @Put()
   async updateSettings(
@@ -73,17 +72,8 @@ export class AdminSettingsController {
       throw new BadRequestException('Missing tenant-id header');
     }
 
-    const settings = await this.settingsService.getSettings();
-
-    if (!settings) {
-      // Jeśli nie znaleziono ustawień, rzucamy błąd 404
-      throw new NotFoundException('Settings not found');
-    }
-
     console.log('🔄 Aktualizowanie ustawień dla tenant-id:', tenant_id);
 
-    // Aktualizujemy ustawienia
-    Object.assign(settings, updateSettingsDto);
-    return await settings.save(); // Zapisujemy zaktualizowane ustawienia w bazie danych
+    return this.settingsService.updateSettings(updateSettingsDto);
   }
 }

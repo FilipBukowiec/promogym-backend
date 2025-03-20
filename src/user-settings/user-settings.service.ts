@@ -39,7 +39,6 @@ export class UserSettingsService {
       country: country,
       name: tenant_id,
       selectedRadioStream: '',
-      radioStreamList: [],
       footerVisibilityRules: [],
       pictureSlideDuration: 15,
       location: { type: 'Point', coordinates: [0, 0] },
@@ -69,9 +68,7 @@ export class UserSettingsService {
     settings.location = updateSettingsDto.location ?? settings.location;
     settings.selectedRadioStream =
       updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
-    settings.radioStreamList =
-      updateSettingsDto.radioStreamList ?? settings.radioStreamList;
-    settings.footerVisibilityRules =
+       settings.footerVisibilityRules =
       updateSettingsDto.footerVisibilityRules ?? settings.footerVisibilityRules;
     settings.pictureSlideDuration =
       updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;

@@ -10,7 +10,7 @@ import { UserModule } from './user/user.module';
 import { MediaModule } from './media/media.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { SettingsModule } from './user-settings/user-settings.module';
-import { AdvertisementModule } from './advertisement/advertisement.module';
+import { AdvertisementModule } from './advertisements/advertisements.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 
 @Module({
@@ -25,7 +25,7 @@ import { AdminSettingsModule } from './admin-settings/admin-settings.module';
     }),
     JwtModule.register({
       secret: process.env.AUTH0_CLIENT_SECRET, // Lub użyj publicznego klucza Auth0
-      signOptions: { expiresIn: '1h' },  // Token ważny przez 1 godzinę
+      // signOptions: { expiresIn: '1h' },  // Token ważny przez 1 godzinę
     }),
     NewsModule,
     AuthModule,
