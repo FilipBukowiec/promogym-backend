@@ -1,4 +1,10 @@
-import { IsArray, IsOptional, IsString, IsNumber, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsOptional,
+  IsString,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class LocationDto {
@@ -41,4 +47,28 @@ export class CreateUserSettingsDto {
   @IsOptional()
   @IsNumber()
   pictureSlideDuration?: number;
+
+  @IsOptional()
+  @IsString()
+  logoFileName?: string;
+
+  @IsOptional()
+  @IsString()
+  logoFilePath?: string;
+
+  @IsOptional()
+  @IsString()
+  logoFileType?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFileName?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFilePath?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFileType?: string;
 }

@@ -58,6 +58,28 @@ export class UserSettings extends Document {
 
   @Prop({ required: true })
   pictureSlideDuration: number;
-}
 
+
+
+
+@Prop()
+  logoFileName: string;
+
+  @Prop()
+  logoFilePath: string;
+
+  @Prop()
+  logoFileType: string;
+
+
+  @Prop()
+  separatorFileName: string;
+
+  @Prop()
+  separatorFilePath: string;
+
+  @Prop()
+  separatorFileType: string;
+
+}
 export const SettingsSchema = SchemaFactory.createForClass(UserSettings);

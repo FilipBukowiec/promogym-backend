@@ -51,5 +51,28 @@ export class UpdateUserSettingsDto {
   @IsOptional()
   @IsNumber()
   pictureSlideDuration?: number;
+
+  @IsOptional()
+  @IsString()
+  logoFileName?: string;
+
+  @IsOptional()
+  @IsString()
+  logoFilePath?: string;
+
+  @IsOptional()
+  @IsString()
+  logoFileType?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFileName?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFilePath?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorFileType?: string;
 }
- 
