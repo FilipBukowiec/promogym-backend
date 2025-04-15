@@ -10,7 +10,7 @@ export class UserSettingsService {
   constructor(
     @InjectModel(UserSettings.name)
     private userSettingsModel: Model<UserSettings>,
-  ) {}
+  ) { }
 
   // Pobieranie ustawień dla danego tenant_id
   async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
@@ -41,6 +41,7 @@ export class UserSettingsService {
       selectedRadioStream: '',
       footerVisibilityRules: [],
       pictureSlideDuration: 15,
+
       location: { type: 'Point', coordinates: [0, 0] },
     };
 
@@ -68,12 +69,18 @@ export class UserSettingsService {
     settings.location = updateSettingsDto.location ?? settings.location;
     settings.selectedRadioStream =
       updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
-       settings.footerVisibilityRules =
+    settings.footerVisibilityRules =
       updateSettingsDto.footerVisibilityRules ?? settings.footerVisibilityRules;
     settings.pictureSlideDuration =
       updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;
-
     settings.country = country || settings.country;
+    settings.logoFileName = updateSettingsDto.logoFileName ?? settings.logoFileName;
+    settings.logoFilePath = updateSettingsDto.logoFilePath ?? settings.logoFilePath;
+    settings.logoFileType = updateSettingsDto.logoFileType ?? settings.logoFileType;
+    settings.separatorFileName = updateSettingsDto.separatorFileName ?? settings.separatorFileName;
+    settings.separatorFilePath = updateSettingsDto.separatorFilePath ?? settings.separatorFilePath;
+    settings.separatorFileType = updateSettingsDto.separatorFileType ?? settings.separatorFileType;
+
 
     console.log('Nowe ustawienie country:', settings.country);
 

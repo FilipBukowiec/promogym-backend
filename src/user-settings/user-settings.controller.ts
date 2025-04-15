@@ -5,8 +5,15 @@ import {
   Put,
   Body,
   Headers,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
+  Param,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as fs from 'fs';
+import * as path from 'path';
 import { UserSettingsService } from './user-settings.service';
 import { UpdateUserSettingsDto } from './update-user-settings.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -104,4 +111,72 @@ export class SettingsController {
       updateSettingsDto,
     );
   }
+
+
+
+ // 📌 Upload LOGO lub SEPARATORA
+@UseGuards(AuthGuard('jwt'))
+@Post('upload/:type') // :type = 'mainlogo' lub 'separator'
+@UseInterceptors(FileInterceptor('file', {
+  storage: diskStorage({
+    destination: (req, file, cb) => {
+      const tenantId = req.headers['tenant-id'] as string;
+      if (!tenantId) return cb(new Error('Tenant ID is required'), '');
+
+      const uploadPath = path.join(
+        __dirname,
+        '..',
+        '..',
+        'public_html',
+        'uploads',
+        'logos',
+        tenantId
+      );
+
+      if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const type = req.params.type;
+      const ext = path.extname(file.originalname).toLowerCase();
+
+      if (type !== 'mainlogo' && type !== 'separator') {
+        return cb(new Error('Invalid type (must be mainlogo or separator)'), '');
+      }
+
+      if (!['.png', '.jpg', '.jpeg', '.webp', '.svg'].includes(ext)) {
+        return cb(new Error('Unsupported file type'), '');
+      }
+
+      cb(null, `${type}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  },
+}))
+
+
+async uploadAsset(
+  @UploadedFile() file: Express.Multer.File,
+  @Headers('tenant-id') tenant_id: string,
+  @Param('type') type: 'mainlogo' | 'separator',
+) {
+  const updateDto: UpdateUserSettingsDto = {};
+
+  if (type === 'mainlogo') {
+    updateDto.logoFileName = file.filename;
+    updateDto.logoFilePath = `uploads/logos/${tenant_id}/${file.filename}`;
+    updateDto.logoFileType = file.mimetype;
+  } else if (type === 'separator') {
+    updateDto.separatorFileName = file.filename;
+    updateDto.separatorFilePath = `uploads/logos/${tenant_id}/${file.filename}`;
+    updateDto.separatorFileType = file.mimetype;
+  }
+
+  return this.settingsService.updateSettingsForTenant(tenant_id, '', updateDto);
+}
 }

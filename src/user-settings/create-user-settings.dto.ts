@@ -32,7 +32,7 @@ export class CreateUserSettingsDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => LocationDto)
-  location?: LocationDto; // Obsługa współrzędnych GPS
+  location?: LocationDto;
 
   @IsOptional()
   @IsString()
