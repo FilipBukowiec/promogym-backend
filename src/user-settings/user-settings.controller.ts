@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -178,5 +179,74 @@ async uploadAsset(
   }
 
   return this.settingsService.updateSettingsForTenant(tenant_id, '', updateDto);
+}
+
+
+
+@UseGuards(AuthGuard('jwt'))
+@Delete('logo/:type')
+async deleteLogo(
+  @Headers('tenant-id') tenant_id: string,
+  @Param('type') type: 'mainlogo' | 'separator',
+) {
+  if (!tenant_id) throw new Error('Tenant ID is required');
+  if (!['mainlogo', 'separator'].includes(type)) {
+    throw new Error('Invalid type (must be mainlogo or separator)');
+  }
+
+  // Ścieżka do katalogu tenanta
+  const logoDir = path.join(
+    __dirname,
+    '..',
+    '..',
+    'public_html',
+    'uploads',
+    'logos',
+    tenant_id
+  );
+
+  if (!fs.existsSync(logoDir)) {
+    return { message: 'Directory does not exist, nothing to delete.' };
+  }
+
+  // Sprawdzenie, czy plik istnieje
+  const files = fs.readdirSync(logoDir);
+  const matchedFile = files.find((file) =>
+    file.startsWith(type + '.') && /\.(png|jpe?g|webp|svg)$/.test(file)
+  );
+
+  if (matchedFile) {
+    const fullPath = path.join(logoDir, matchedFile);
+    try {
+      fs.unlinkSync(fullPath); // Usuwanie pliku
+      console.log(`Usunięto plik: ${fullPath}`);
+    } catch (err) {
+      console.error('Błąd podczas usuwania pliku:', err);
+      return { message: 'Error deleting file.' };
+    }
+  } else {
+    return { message: 'No matching file found to delete.' };
+  }
+
+  // Wyczyść dane w bazie danych (jeśli potrzeba)
+  const updateDto: UpdateUserSettingsDto = {};
+  if (type === 'mainlogo') {
+    updateDto.logoFileName = '';
+    updateDto.logoFilePath = '';
+    updateDto.logoFileType = '';
+  } else {
+    updateDto.separatorFileName = '';
+    updateDto.separatorFilePath = '';
+    updateDto.separatorFileType = '';
+  }
+
+  try {
+    await this.settingsService.updateSettingsForTenant(tenant_id, '', updateDto);
+  } catch (err) {
+    console.error('Błąd podczas aktualizacji danych w bazie:', err);
+    return { message: 'Error updating database.' };
+  }
+
+  return { message: 'Logo deleted successfully' };
 }
 }
