@@ -46,12 +46,33 @@ export class AdvertisementsService {
   }
 
   async update(id: string, updateData: Partial<{ countries: string[] }>): Promise<void> {
-    const updatedFields:Partial<{countries:string[]}> = {...updateData};
-    if(updateData.countries){
+    console.log('🛠 UPDATE: próbuję zaktualizować:', id, updateData);
+  
+    if (updateData.countries) {
+      // Sortowanie tablicy krajów
       updateData.countries = [...updateData.countries].sort();
     }
-    await this.advertisementModel.findByIdAndUpdate(id, updateData, { new: true });
+  
+    try {
+      // Przeprowadzamy aktualizację w bazie danych
+      const updatedAdvertisement = await this.advertisementModel.findByIdAndUpdate(
+        id, 
+        updateData, 
+        { new: true } // Ustalamy, aby zwrócić nowy obiekt po aktualizacji
+      );
+  
+      // Sprawdzamy, czy aktualizacja się udała
+      if (!updatedAdvertisement) {
+        throw new Error('Nie znaleziono reklamy do aktualizacji');
+      }
+  
+      console.log('✅ Reklama została zaktualizowana:', updatedAdvertisement);
+    } catch (error) {
+      console.error('❌ Błąd podczas aktualizacji reklamy:', error);
+      throw error; // Rzucamy błąd dalej, żeby kontroler mógł odpowiedzieć
+    }
   }
+  
 
   async delete(id: string): Promise<Advertisement[]> {
     const ad = await this.advertisementModel.findById(id);

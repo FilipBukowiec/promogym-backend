@@ -29,10 +29,10 @@ export class CreateUserSettingsDto {
   @IsString()
   country: string;
 
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => LocationDto)
-  location?: LocationDto;
+  // @IsOptional()
+  // @ValidateNested()
+  // @Type(() => LocationDto)
+  // location?: LocationDto;
 
   @IsOptional()
   @IsString()
@@ -71,4 +71,12 @@ export class CreateUserSettingsDto {
   @IsOptional()
   @IsString()
   separatorFileType?: string;
+
+  @IsOptional()
+  @IsString()
+  mainLogoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorLogoUrl?: string;
 }

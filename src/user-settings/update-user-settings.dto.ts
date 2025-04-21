@@ -75,4 +75,12 @@ export class UpdateUserSettingsDto {
   @IsOptional()
   @IsString()
   separatorFileType?: string;
+
+  @IsOptional()
+  @IsString()
+  mainLogoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  separatorLogoUrl?: string;
 }

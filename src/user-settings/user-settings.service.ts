@@ -10,7 +10,7 @@ export class UserSettingsService {
   constructor(
     @InjectModel(UserSettings.name)
     private userSettingsModel: Model<UserSettings>,
-  ) { }
+  ) {}
 
   // Pobieranie ustawień dla danego tenant_id
   async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
@@ -41,8 +41,12 @@ export class UserSettingsService {
       selectedRadioStream: '',
       footerVisibilityRules: [],
       pictureSlideDuration: 15,
+      logoFilePath:"",
+      separatorFilePath: ""
 
-      location: { type: 'Point', coordinates: [0, 0] },
+  
+
+      // location: { type: 'Point', coordinates: [0, 0] },
     };
 
     const settings = new this.userSettingsModel(defaultSettings);
@@ -66,7 +70,7 @@ export class UserSettingsService {
     settings.language = updateSettingsDto.language ?? settings.language;
     settings.country = updateSettingsDto.country ?? settings.country;
     settings.name = updateSettingsDto.name ?? settings.name;
-    settings.location = updateSettingsDto.location ?? settings.location;
+    // settings.location = updateSettingsDto.location ?? settings.location;
     settings.selectedRadioStream =
       updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
     settings.footerVisibilityRules =
@@ -74,17 +78,29 @@ export class UserSettingsService {
     settings.pictureSlideDuration =
       updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;
     settings.country = country || settings.country;
-    settings.logoFileName = updateSettingsDto.logoFileName ?? settings.logoFileName;
-    settings.logoFilePath = updateSettingsDto.logoFilePath ?? settings.logoFilePath;
-    settings.logoFileType = updateSettingsDto.logoFileType ?? settings.logoFileType;
-    settings.separatorFileName = updateSettingsDto.separatorFileName ?? settings.separatorFileName;
-    settings.separatorFilePath = updateSettingsDto.separatorFilePath ?? settings.separatorFilePath;
-    settings.separatorFileType = updateSettingsDto.separatorFileType ?? settings.separatorFileType;
-
+    settings.logoFileName =
+      updateSettingsDto.logoFileName ?? settings.logoFileName;
+    settings.logoFilePath =
+      updateSettingsDto.logoFilePath ?? settings.logoFilePath;
+    settings.logoFileType =
+      updateSettingsDto.logoFileType ?? settings.logoFileType;
+    settings.separatorFileName =
+      updateSettingsDto.separatorFileName ?? settings.separatorFileName;
+    settings.separatorFilePath =
+      updateSettingsDto.separatorFilePath ?? settings.separatorFilePath;
+    settings.separatorFileType =
+      updateSettingsDto.separatorFileType ?? settings.separatorFileType;
+    settings.mainLogoUrl =
+      updateSettingsDto.mainLogoUrl ?? settings.mainLogoUrl;
 
     console.log('Nowe ustawienie country:', settings.country);
 
     await settings.save();
     return settings;
   }
+
+async getAllTenants(): Promise<string[]>{
+  return this.userSettingsModel.distinct('tenant_id')
+}
+
 }

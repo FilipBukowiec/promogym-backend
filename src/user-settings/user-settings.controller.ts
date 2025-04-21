@@ -49,6 +49,14 @@ export class SettingsController {
     return settings;
   }
 
+  
+  @UseGuards(AuthGuard('jwt'))
+  @Get('tenants')
+  async getAllTenants(): Promise<string[]> {
+    return this.settingsService.getAllTenants();
+  }
+
+
   // Tworzenie domyślnych ustawień dla danego tenanta
   @UseGuards(AuthGuard('jwt'))
   @Post()
