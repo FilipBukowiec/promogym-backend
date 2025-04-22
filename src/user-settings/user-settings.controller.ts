@@ -52,7 +52,7 @@ export class SettingsController {
   
   @UseGuards(AuthGuard('jwt'))
   @Get('tenants')
-  async getAllTenants(): Promise<string[]> {
+  async getAllTenants(): Promise<{tenant_id:string, country: string}[]> {
     return this.settingsService.getAllTenants();
   }
 

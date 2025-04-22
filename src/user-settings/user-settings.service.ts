@@ -10,7 +10,7 @@ export class UserSettingsService {
   constructor(
     @InjectModel(UserSettings.name)
     private userSettingsModel: Model<UserSettings>,
-  ) {}
+  ) { }
 
   // Pobieranie ustawień dla danego tenant_id
   async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
@@ -41,10 +41,8 @@ export class UserSettingsService {
       selectedRadioStream: '',
       footerVisibilityRules: [],
       pictureSlideDuration: 15,
-      logoFilePath:"",
-      separatorFilePath: ""
-
-  
+      logoFilePath: '',
+      separatorFilePath: '',
 
       // location: { type: 'Point', coordinates: [0, 0] },
     };
@@ -99,8 +97,21 @@ export class UserSettingsService {
     return settings;
   }
 
-async getAllTenants(): Promise<string[]>{
-  return this.userSettingsModel.distinct('tenant_id')
-}
-
+  async getAllTenants(): Promise<{ tenant_id: string; country: string }[]> {
+    const tenants = await this.userSettingsModel.aggregate([
+      {
+        $group: {
+          _id: { tenant_id: '$tenant_id', country: '$country' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          tenant_id: '$_id.tenant_id',
+          country: '$_id.country',
+        },
+      },
+    ]);
+    return tenants;
+  }
 }
