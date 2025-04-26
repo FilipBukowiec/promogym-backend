@@ -30,21 +30,24 @@ export class AdvertisementsController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          const uploadPath = path.join(
+
+          const baseUploadPath = process.env.NODE_ENV === "production"
+          ? path.join(
             __dirname,
             '..',
             '..',
             'public_html',
             'uploads',
             'advertisements',
-          );
+          )
+          :path.join(__dirname, '..', '..', 'uploads', 'advertisements');
   
           // Tworzenie folderu, jeśli nie istnieje
-          if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+          if (!fs.existsSync(baseUploadPath)) {
+            fs.mkdirSync(baseUploadPath, { recursive: true });
           }
-  
-          cb(null, uploadPath);
+   
+          cb(null, baseUploadPath);
         },
         filename: (req, file, cb) => {
           // Generujemy unikalną nazwę pliku, aby uniknąć kolizji

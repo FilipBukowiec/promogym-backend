@@ -35,15 +35,6 @@ export class UserSettings extends Document {
   @Prop({ required: false })
   selectedRadioStream: string;
 
-  // @Prop({
-  //   type: [
-  //     {
-  //       url: { type: String, required: true }, 
-  //       description: { type: String, required: true },
-  //     },
-  //   ],
-  // })
-  // radioStreamList: { url: string; description: string }[];
 
   @Prop({
     type: [

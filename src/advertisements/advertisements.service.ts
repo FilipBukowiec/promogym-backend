@@ -78,15 +78,20 @@ export class AdvertisementsService {
     const ad = await this.advertisementModel.findById(id);
     if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
 
-    const filePath = path.join(__dirname, '..', '..', 'public_html', ad.filePath);
-
-    try {
-      if (fs.existsSync(filePath)) {
-        await fs.promises.unlink(filePath);
-      }
-    } catch (err) {
-      console.error('Błąd przy usuwaniu pliku:', err);
+    const uploadsDir = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '..', '..', 'public_html', 'uploads', 'advertisements')
+    : path.join(__dirname, '..', '..', 'uploads', 'advertisements');
+  
+  const filePath = path.join(uploadsDir, path.basename(ad.filePath));
+  
+  try {
+    if (fs.existsSync(filePath)) {
+      await fs.promises.unlink(filePath);
     }
+  } catch (err) {
+    console.error('Błąd przy usuwaniu pliku:', err);
+  }
+  
 
     await this.advertisementModel.findByIdAndDelete(id);
 

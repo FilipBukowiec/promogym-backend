@@ -12,6 +12,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
 import { SettingsModule } from './user-settings/user-settings.module';
 import { AdvertisementModule } from './advertisements/advertisements.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -24,8 +25,7 @@ import { AdminSettingsModule } from './admin-settings/admin-settings.module';
       }),
     }),
     JwtModule.register({
-      secret: process.env.AUTH0_CLIENT_SECRET, // Lub użyj publicznego klucza Auth0
-      // signOptions: { expiresIn: '1h' },  // Token ważny przez 1 godzinę
+      secret: process.env.AUTH0_CLIENT_SECRET, 
     }),
     NewsModule,
     AuthModule,
@@ -33,8 +33,9 @@ import { AdminSettingsModule } from './admin-settings/admin-settings.module';
     MediaModule,
     AnnouncementModule,
     SettingsModule,
-       AdvertisementModule,
+    AdvertisementModule,
     AdminSettingsModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],
