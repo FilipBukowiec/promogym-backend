@@ -21,7 +21,7 @@ import { CreateAdvertisementDto } from './create-advertisement.dto';
 
 @Controller('advertisement')
 export class AdvertisementsController {
-  constructor(private readonly advertisementsService: AdvertisementsService) {}
+  constructor(private readonly advertisementsService: AdvertisementsService) { }
 
   // 📌 Przesyłanie plików (JWT Guard)
   @Post('upload')
@@ -33,12 +33,14 @@ export class AdvertisementsController {
           const baseUploadPath =
             process.env.NODE_ENV === 'production'
               ? path.join(
-                  process.cwd(),
-                  '..',
-                  'public_html',
-                  'uploads',
-                  'advertisements',
-                )
+                __dirname,
+                '..',
+                '..',
+                '..',
+                'public_html',
+                'uploads',
+                'advertisements',
+              ) 
               : path.join(__dirname, '..', '..', 'uploads', 'advertisements');
 
           // Tworzenie folderu, jeśli nie istnieje
