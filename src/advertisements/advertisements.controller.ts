@@ -30,23 +30,22 @@ export class AdvertisementsController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
+          const baseUploadPath =
+            process.env.NODE_ENV === 'production'
+              ? path.join(
+                  process.cwd(),
+                  '..',
+                  'public_html',
+                  'uploads',
+                  'advertisements',
+                )
+              : path.join(__dirname, '..', '..', 'uploads', 'advertisements');
 
-          const baseUploadPath = process.env.NODE_ENV === "production"
-          ? path.join(
-            __dirname,
-            '..',
-            '..',
-            'public_html',
-            'uploads',
-            'advertisements',
-          )
-          :path.join(__dirname, '..', '..', 'uploads', 'advertisements');
-  
           // Tworzenie folderu, jeśli nie istnieje
           if (!fs.existsSync(baseUploadPath)) {
             fs.mkdirSync(baseUploadPath, { recursive: true });
           }
-   
+
           cb(null, baseUploadPath);
         },
         filename: (req, file, cb) => {
@@ -62,10 +61,10 @@ export class AdvertisementsController {
     @Body() body: CreateAdvertisementDto,
   ) {
     console.log('Otrzymane dane z frontendu (body):', body);
-  
+
     // Parsujemy countries, jeśli przyszło jako string JSON
     let parsedCountries: string[] = [];
-  
+
     if (body.countries) {
       if (typeof body.countries === 'string') {
         try {
@@ -81,9 +80,9 @@ export class AdvertisementsController {
         parsedCountries = body.countries;
       }
     }
-  
+
     console.log('Sparsowane countries:', parsedCountries);
-  
+
     // Tworzymy DTO do wysłania do serwisu
     const createAdvertisementDto: CreateAdvertisementDto = {
       fileName: file.filename,
@@ -91,12 +90,12 @@ export class AdvertisementsController {
       fileType: file.mimetype,
       countries: parsedCountries, // Przekazujemy już prawidłową tablicę
     };
-  
+
     console.log('Tworzone DTO dla reklamy:', createAdvertisementDto);
-  
+
     return this.advertisementsService.upload(createAdvertisementDto);
   }
-  
+
   @Get()
   async getAll() {
     return this.advertisementsService.getAll();
@@ -119,7 +118,7 @@ export class AdvertisementsController {
   @UseGuards(AuthGuard('jwt'))
   async updateAdvertisement(
     @Param('id') id: string,
-    @Body() updateData: Partial<{ countries: string[] }>
+    @Body() updateData: Partial<{ countries: string[] }>,
   ) {
     await this.advertisementsService.update(id, updateData);
     return { message: 'Advertisement updated successfully' };

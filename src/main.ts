@@ -4,41 +4,60 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { join } from 'path';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { INestApplicationContext } from '@nestjs/common';
+import { ServerOptions } from 'socket.io';
 
 dotenv.config();
 
+class CustomIoAdapter extends IoAdapter {
+  constructor(app: INestApplicationContext, private readonly isProduction: boolean) {
+    super(app);
+  }
+
+  createIOServer(port: number, options?: any): any {
+    const serverOptions = {
+      ...options,
+      path: this.isProduction ? '/backend/socket.io' : '/socket.io',
+    };
+    return super.createIOServer(port, serverOptions);
+  }
+}
+
+
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const prefix = isProduction ? 'backend' : '';
 
-  // Pobieranie URL frontendowego z zmiennej środowiskowej lub domyślnie localhost
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+  if (prefix) {
+    app.setGlobalPrefix(prefix);
+  }
 
-  // Konfiguracja CORS dla HTTP
+  // Użycie naszego adaptera
+  const ioAdapter = new CustomIoAdapter(app, isProduction);
+  app.useWebSocketAdapter(ioAdapter);
+
+  const frontendUrl = process.env.FRONTEND_URL;
+
   app.enableCors({
-    origin: frontendUrl, // Dopuszczamy dostęp z frontendowej aplikacji
-    methods: 'GET, POST, PUT, DELETE, PATCH', // Dodajemy wszystkie metody, które będą używane
-    allowedHeaders: 'Content-Type, Authorization, tenant-id, country', // Dodajemy wszystkie nagłówki, które są wymagane
+    origin: frontendUrl,
+    methods: 'GET, POST, PUT, DELETE, PATCH',
+    allowedHeaders: 'Content-Type, Authorization, tenant-id, country',
   });
 
-  // Middleware do obsługi preflight request dla OPTIONS
   app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', frontendUrl);
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, tenant-id, country');
-      return res.sendStatus(204); // Odpowiada na preflight OPTIONS z 204
+      return res.sendStatus(204);
     }
     next();
   });
 
-  // Ustawienie WebSocket Adaptera z obsługą CORS
-  const ioAdapter = new IoAdapter(app);
-  app.useWebSocketAdapter(ioAdapter);
-
-  // Serwowanie plików statycznych (np. uploadów)
   app.use('/uploads', express.static(join(__dirname, '..', 'public_html', 'uploads')));
 
-  // Słuchanie na porcie (domyślnie 3000, ale można zmienić przez .env)
   await app.listen(process.env.PORT || 3000);
 }
 

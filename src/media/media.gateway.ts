@@ -10,9 +10,10 @@ import { MediaService } from './media.service';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:4200',
+    origin: ['http://localhost:4200', 'https://app.promogym.pl'],
     methods: ['GET', 'POST'],
   },
+  path: '/backend/socket.io', 
 })
 export class MediaGateway {
   @WebSocketServer()

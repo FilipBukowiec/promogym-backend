@@ -79,7 +79,7 @@ export class AdvertisementsService {
     if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
 
     const uploadsDir = process.env.NODE_ENV === 'production'
-    ? path.join(__dirname, '..', '..', 'public_html', 'uploads', 'advertisements')
+    ? path.join(process.cwd(), '..', 'public_html', 'uploads', 'advertisements')
     : path.join(__dirname, '..', '..', 'uploads', 'advertisements');
   
   const filePath = path.join(uploadsDir, path.basename(ad.filePath));
