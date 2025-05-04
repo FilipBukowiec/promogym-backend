@@ -78,11 +78,11 @@ export class AdvertisementsService {
     const ad = await this.advertisementModel.findById(id);
     if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
 
-    const uploadsDir = process.env.NODE_ENV === 'production'
-    ? path.join(process.cwd(), '..', 'public_html', 'uploads', 'advertisements')
+    const baseUploadPath = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'advertisements')
     : path.join(__dirname, '..', '..', 'uploads', 'advertisements');
   
-  const filePath = path.join(uploadsDir, path.basename(ad.filePath));
+  const filePath = path.join(baseUploadPath, path.basename(ad.filePath));
   
   try {
     if (fs.existsSync(filePath)) {

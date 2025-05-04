@@ -132,16 +132,12 @@ export class SettingsController {
       const tenantId = req.headers['tenant-id'] as string;
       if (!tenantId) return cb(new Error('Tenant ID is required'), '');
 
-      const uploadPath = path.join(
-        __dirname,
-        '..',
-        '..',
-        'public_html',
-        'uploads',
-        'logos',
-        tenantId
-      );
-
+      const baseUploadPath =
+      process.env.NODE_ENV === 'production'
+        ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'logos')
+        : path.join(__dirname, '..', '..', 'uploads', 'logos');
+    
+    const uploadPath = path.join(baseUploadPath, tenantId);
       if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
       cb(null, uploadPath);
     },
@@ -203,15 +199,12 @@ async deleteLogo(
   }
 
   // Ścieżka do katalogu tenanta
-  const logoDir = path.join(
-    __dirname,
-    '..',
-    '..',
-    'public_html',
-    'uploads',
-    'logos',
-    tenant_id
-  );
+  const baseUploadPath =
+  process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'logos')
+    : path.join(__dirname, '..', '..', 'uploads', 'logos');
+
+const logoDir = path.join(baseUploadPath, tenant_id);
 
   if (!fs.existsSync(logoDir)) {
     return { message: 'Directory does not exist, nothing to delete.' };

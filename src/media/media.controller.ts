@@ -36,21 +36,23 @@ export class MediaController {
           return cb(new Error('Tenant ID is required'), '');
         }
 
-        const uploadPath = path.join(__dirname, "..", "..", "public_html", "uploads", "media", tenantId);
-        
-        // Tworzenie folderu jeśli nie istnieje
-        if (!fs.existsSync(uploadPath)) {
-          fs.mkdirSync(uploadPath, { recursive: true });
-        }
+        const baseUploadPath =
+        process.env.NODE_ENV === 'production'
+          ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'media', tenantId)
+          : path.join(__dirname, '..', '..', 'uploads', 'media', tenantId);
 
-        // Przesyłanie pliku do odpowiedniego folderu
-        cb(null, uploadPath);
-      },
-      filename: (req, file, cb) => {
-        cb(null, file.originalname);
-      },
-    }),
-  }))
+      if (!fs.existsSync(baseUploadPath)) {
+        fs.mkdirSync(baseUploadPath, { recursive: true });
+      }
+
+      cb(null, baseUploadPath);
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+  }),
+}),
+)
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Headers('tenant-id') tenant_id: string) {
     // Teraz nie musimy sprawdzać tenant-id, bo zostało to już zrobione w destination
     const createMediaDto: CreateMediaDto = {

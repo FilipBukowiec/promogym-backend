@@ -36,13 +36,19 @@ export class MediaService {
       throw new NotFoundException('Plik nie znaleziony');
     }
 
-    const filePath = path.join(__dirname, '..', '..', 'public_html', media.filePath);
+    const baseUploadPath =
+    process.env.NODE_ENV === 'production'
+      ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'media', tenant_id)
+      : path.join(__dirname, '..', '..', 'uploads', 'media', tenant_id);
 
-    try {
-      await fs.promises.unlink(filePath); // Usuwamy plik synchronicznie
-    } catch (err) {
-      throw new InternalServerErrorException('Nie udało się usunąć pliku');
-    }
+  const filePath = path.join(baseUploadPath, path.basename(media.filePath));
+
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK); // Sprawdzenie istnienia
+    await fs.promises.unlink(filePath); // Usunięcie pliku
+  } catch (err) {
+    console.warn('⚠️ Plik nie istnieje lub nie można go usunąć:', filePath);
+  }
 
     // Usuwamy media
     await this.mediaModel.findByIdAndDelete(id);
