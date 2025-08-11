@@ -1,10 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type SentenceDocument = Sentence & Document;
-
 @Schema()
-export class Sentence {
+export class Sentence extends Document{
+
   @Prop({ required: true })
   content: string;
 

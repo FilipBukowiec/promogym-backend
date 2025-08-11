@@ -10,7 +10,7 @@ export class SentencesController {
 @UseGuards(AuthGuard('jwt'))
 @Get()
 async findAll(@Headers('tenant-id') tenant_id: string):Promise<Sentence[]>{
-return this.sentencesServices.findAllSentences();
+return this.sentencesServices.getAllSentences();
 }
 
 }
