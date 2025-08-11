@@ -13,6 +13,8 @@ import { SettingsModule } from './user-settings/user-settings.module';
 import { AdvertisementModule } from './advertisements/advertisements.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 import { ContactModule } from './contact/contact.module';
+import { SentencesModule } from './sentences/sentences.module';
+import { SentencesController } from './sentences/sentences.controller';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { ContactModule } from './contact/contact.module';
     AdvertisementModule,
     AdminSettingsModule,
     ContactModule,
+    SentencesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
