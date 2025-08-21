@@ -13,6 +13,7 @@ import { SettingsModule } from './user-settings/user-settings.module';
 import { AdvertisementModule } from './advertisements/advertisements.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 import { ContactModule } from './contact/contact.module';
+import { LibraryModule } from './library/library.module';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { ContactModule } from './contact/contact.module';
       }),
     }),
     JwtModule.register({
-      secret: process.env.AUTH0_CLIENT_SECRET, 
+      secret: process.env.AUTH0_CLIENT_SECRET,
     }),
     NewsModule,
     AuthModule,
@@ -37,6 +38,7 @@ import { ContactModule } from './contact/contact.module';
     AdvertisementModule,
     AdminSettingsModule,
     ContactModule,
+    LibraryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
