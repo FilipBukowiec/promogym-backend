@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Sentence } from './sentence.model';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,7 +8,7 @@ import { CreateSentenceDto } from './create-sentence.dto';
 export class SentencesService {
   constructor(
     @InjectModel(Sentence.name) private sentenceModel: Model<Sentence>,
-  ) {}
+  ) { }
 
   async createOne(createSentenceDto: CreateSentenceDto): Promise<Sentence> {
     await this.sentenceModel.updateMany(
@@ -67,6 +67,21 @@ export class SentencesService {
     }
     return sentence;
   }
+
+
+  async updateSentence(id: string, content: string): Promise<Sentence> {
+    const updatedSentence = await this.sentenceModel.findOneAndUpdate(
+      { _id: id },
+      { content },
+      { new: true },
+
+    )
+    if (!updatedSentence) {
+      throw new NotFoundException("Sentence not found")
+    }
+    return updatedSentence;
+  }
+
 
   async deleteById(sentenceId: string): Promise<void> {
     const sentence = await this.sentenceModel.findById(sentenceId);

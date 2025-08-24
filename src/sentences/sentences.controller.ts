@@ -50,4 +50,10 @@ async moveDown(@Param('id') id: string):Promise<void>{
   return this.sentencesServices.moveDown(id);
 }
 
+
+@Put(':id')
+async update(@Param('id') id: string, @Body('content') content: string ){
+return this.sentencesServices.updateSentence(id, content)
+}
+
 }
