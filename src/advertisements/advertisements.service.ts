@@ -44,6 +44,7 @@ export class AdvertisementsService {
       .exec();
   }
 
+  
   async update(id: string, updateData: Partial<{ countries: string[] }>): Promise<void> {
     console.log('🛠 UPDATE: próbuję zaktualizować:', id, updateData);
 
