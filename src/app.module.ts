@@ -1,19 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AdminSettingsModule } from './admin-settings/admin-settings.module';
+import { AdvertisementModule } from './advertisements/advertisements.module';
+import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { NewsModule } from './news/news.module';
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { MediaModule } from './media/media.module';
-import { AnnouncementModule } from './announcement/announcement.module';
-import { SettingsModule } from './user-settings/user-settings.module';
-import { AdvertisementModule } from './advertisements/advertisements.module';
-import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 import { ContactModule } from './contact/contact.module';
 import { LibraryModule } from './library/library.module';
+import { MediaModule } from './media/media.module';
+import { NewsModule } from './news/news.module';
+import { SentencesModule } from './sentences/sentences.module';
+import { SettingsModule } from './user-settings/user-settings.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { LibraryModule } from './library/library.module';
     AdminSettingsModule,
     ContactModule,
     LibraryModule,
+    SentencesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
