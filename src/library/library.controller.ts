@@ -61,7 +61,7 @@ export class LibraryController {
           cb(null, baseUploadPath);
         },
         filename: (req, file, cb) => {
-          cb(null, file.originalname);
+          cb(null, `${Date.now()}-${file.originalname}`);
         },
       }),
     }),

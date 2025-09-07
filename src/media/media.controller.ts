@@ -20,43 +20,64 @@ import { AuthGuard } from '@nestjs/passport'; // JWT Guard
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) { }
+  constructor(private readonly mediaService: MediaService) {}
 
   // 📌 Przesyłanie plików (JWT Guard)
   @Post('upload')
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(FileInterceptor('file', {
-    limits: {
-      fileSize: 50 * 1024 * 1024,
-    },
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        // Sprawdzanie tenant-id tylko w tym miejscu, a nie w metodzie uploadFile
-        const tenantId = req.headers['tenant-id'] as string;
-
-        if (!tenantId) {
-          // Przekazanie dwóch argumentów do cb: error i pusty string jako destination
-          return cb(new Error('Tenant ID is required'), '');
-        }
-
-        const baseUploadPath =
-          process.env.NODE_ENV === 'production'
-            ? path.join(__dirname, '..', '..', '..', 'public_html', 'uploads', 'media', tenantId)
-            : path.join(__dirname, '..', '..', 'public_html', 'uploads', 'media', tenantId);
-
-        if (!fs.existsSync(baseUploadPath)) {
-          fs.mkdirSync(baseUploadPath, { recursive: true });
-        }
-
-        cb(null, baseUploadPath);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 50 * 1024 * 1024,
       },
-      filename: (req, file, cb) => {
-        cb(null, file.originalname);
-      },
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          // Sprawdzanie tenant-id tylko w tym miejscu, a nie w metodzie uploadFile
+          const tenantId = req.headers['tenant-id'] as string;
+
+          if (!tenantId) {
+            // Przekazanie dwóch argumentów do cb: error i pusty string jako destination
+            return cb(new Error('Tenant ID is required'), '');
+          }
+
+          const baseUploadPath =
+            process.env.NODE_ENV === 'production'
+              ? path.join(
+                  __dirname,
+                  '..',
+                  '..',
+                  '..',
+                  'public_html',
+                  'uploads',
+                  'media',
+                  tenantId,
+                )
+              : path.join(
+                  __dirname,
+                  '..',
+                  '..',
+                  'public_html',
+                  'uploads',
+                  'media',
+                  tenantId,
+                );
+
+          if (!fs.existsSync(baseUploadPath)) {
+            fs.mkdirSync(baseUploadPath, { recursive: true });
+          }
+
+          cb(null, baseUploadPath);
+        },
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`);
+        },
+      }),
     }),
-  }),
   )
-  async uploadFile(@UploadedFile() file: Express.Multer.File, @Headers('tenant-id') tenant_id: string) {
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Headers('tenant-id') tenant_id: string,
+  ) {
     // Teraz nie musimy sprawdzać tenant-id, bo zostało to już zrobione w destination
     const createMediaDto: CreateMediaDto = {
       fileName: file.filename,
@@ -80,7 +101,10 @@ export class MediaController {
   // 📌 Usuwanie pliku (JWT Guard)
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  async delete(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+  async delete(
+    @Param('id') id: string,
+    @Headers('tenant-id') tenant_id: string,
+  ) {
     if (!tenant_id) {
       throw new Error('Tenant ID is required');
     }
@@ -91,7 +115,10 @@ export class MediaController {
   // 📌 Przesunięcie pliku w górę (JWT Guard)
   @Put('move-up/:id')
   @UseGuards(AuthGuard('jwt'))
-  async moveUp(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+  async moveUp(
+    @Param('id') id: string,
+    @Headers('tenant-id') tenant_id: string,
+  ) {
     if (!tenant_id) {
       throw new Error('Tenant ID is required');
     }
@@ -102,7 +129,10 @@ export class MediaController {
   // 📌 Przesunięcie pliku w dół (JWT Guard)
   @Put('move-down/:id')
   @UseGuards(AuthGuard('jwt'))
-  async moveDown(@Param('id') id: string, @Headers('tenant-id') tenant_id: string) {
+  async moveDown(
+    @Param('id') id: string,
+    @Headers('tenant-id') tenant_id: string,
+  ) {
     if (!tenant_id) {
       throw new Error('Tenant ID is required');
     }
