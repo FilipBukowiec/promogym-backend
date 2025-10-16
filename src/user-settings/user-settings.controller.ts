@@ -227,11 +227,10 @@ export class UserSettingsController {
             'uploads',
             'logos',
           )
-        : path.join(__dirname, '..', '..', 'uploads', 'logos');
+        : path.join(__dirname, '..', '..', 'public_html', 'uploads', 'logos');
 
     const logoDir = path.join(baseUploadPath, tenant_id);
-
-    if (!fs.existsSync(logoDir)) {
+    if (!fs.existsSync(baseUploadPath)) {
       return { message: 'Directory does not exist, nothing to delete.' };
     }
 
@@ -239,7 +238,7 @@ export class UserSettingsController {
     const files = fs.readdirSync(logoDir);
     const matchedFile = files.find(
       (file) =>
-        file.startsWith(type + '.') && /\.(png|jpe?g|webp|svg)$/.test(file),
+        file.includes(type + '.') && /\.(png|jpe?g|webp|svg)$/.test(file),
     );
 
     if (matchedFile) {
