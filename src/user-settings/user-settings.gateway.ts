@@ -9,7 +9,7 @@ import { BaseGateway } from 'src/common/gateways/base.gateway';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4200', 'https://app.promogym.pl'],
+    origin: ['https://localhost:4200', 'https://app.promogym.pl'],
     methods: ['GET', 'POST'],
   },
   path: '/backend/socket.io',

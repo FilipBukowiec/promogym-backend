@@ -5,7 +5,8 @@ import * as express from 'express';
 import { join } from 'path';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { INestApplicationContext } from '@nestjs/common';
-import { ServerOptions } from 'socket.io';
+import * as fs from 'fs';
+import * as https from 'https';
 
 dotenv.config();
 
@@ -26,8 +27,28 @@ class CustomIoAdapter extends IoAdapter {
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
   const isProduction = process.env.NODE_ENV === 'production';
+  let httpsOptions: any = {};
+
+  if (!isProduction) {
+    try {
+      // Wczytanie certyfikatów SSL dla HTTPS na localhost
+      httpsOptions = {
+        key: fs.readFileSync('./ssl/server.key'),
+        cert: fs.readFileSync('./ssl/server.crt'),
+      };
+      console.log('✅ Wczytano certyfikaty SSL. Serwer uruchomi się na HTTPS.');
+    } catch (error) {
+      console.warn('❌ Nie znaleziono certyfikatów SSL (./ssl/server.key lub .crt). Serwer uruchomi się na HTTP.');
+      httpsOptions = {};
+    }
+  }
+
+  // Utworzenie aplikacji z opcjami HTTPS (jeśli wczytane)
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions: Object.keys(httpsOptions).length > 0 ? httpsOptions : undefined,
+  });
+
   const prefix = isProduction ? 'backend' : '';
 
   if (prefix) {
@@ -44,6 +65,7 @@ async function bootstrap() {
     origin: frontendUrl,
     methods: 'GET, POST, PUT, DELETE, PATCH',
     allowedHeaders: 'Content-Type, Authorization, tenant-id, country',
+    credentials: true, // Dodane, często wymagane dla Socket.io i uwierzytelniania
   });
 
   app.use((req, res, next) => {

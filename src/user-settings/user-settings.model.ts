@@ -55,6 +55,13 @@ export class UserSettings extends Document {
 
   @Prop()
   separatorLogoUrl: string;
+
+@Prop()
+enableFacebookModule: boolean;
+
+@Prop()
+FbPageAccessToken: string;
+
 }
 export const SettingsSchema = SchemaFactory.createForClass(UserSettings);
 
