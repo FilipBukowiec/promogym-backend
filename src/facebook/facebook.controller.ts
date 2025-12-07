@@ -3,11 +3,15 @@ import { FacebookService } from './facebook.service';
 
 @Controller('facebook')
 export class FacebookController {
-  constructor(private readonly facebookService: FacebookService) { }
+  constructor(private readonly facebookService: FacebookService) {}
 
-  @Get('pages')
-  async getPages(@Query('userToken') userToken: string) {
-    return this.facebookService.getPages(userToken);
+  @Post('pages')
+  async getPages(@Body() body: { userToken: string }) {
+    console.log(
+      'Odebrano UserToken:',
+      body.userToken ? 'Jest token' : 'Brak tokenu!',
+    );
+    return this.facebookService.getPages(body.userToken);
   }
 
   @Post('stories')
