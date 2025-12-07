@@ -48,6 +48,7 @@ export class UserSettingsService {
       selectedFacebookPage: '',
       facebookPageAccess: '',
       facebookPageId: '',
+      facebookPageAdress: '',
     };
 
     try {
@@ -113,8 +114,10 @@ export class UserSettingsService {
       updateSettingsDto.selectedFacebookPage ?? settings.selectedFacebookPage;
     settings.facebookPageAccess =
       updateSettingsDto.facebookPageAccess ?? settings.facebookPageAccess;
-    settings.facebookPageId = updateSettingsDto.facebookPageId =
-      settings.facebookPageId;
+    settings.facebookPageId =
+      updateSettingsDto.facebookPageId ?? settings.facebookPageId;
+    settings.facebookPageAdress =
+      updateSettingsDto.facebookPageAdress ?? settings.facebookPageAdress;
 
     console.log('Nowe ustawienie country:', settings.country);
 

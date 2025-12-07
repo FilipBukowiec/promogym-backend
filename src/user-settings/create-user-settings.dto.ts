@@ -83,4 +83,8 @@ export class CreateUserSettingsDto {
   @IsOptional()
   @IsString()
   facebookPageId?: string;
+
+  @IsOptional()
+  @IsString()
+  facebookPageAdress?: string
 }

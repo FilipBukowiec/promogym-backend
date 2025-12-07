@@ -67,7 +67,13 @@ export class UserSettings extends Document {
 
   @Prop()
   facebookPageId: string;
+
+  @Prop()
+  facebookPageAdress: string;
+
 }
+
+
 
 export const SettingsSchema = SchemaFactory.createForClass(UserSettings);
 
