@@ -4,9 +4,10 @@ import {
   IsString,
   IsNumber,
   ValidateNested,
+  IsBoolean,
+  isString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
 
 export class CreateUserSettingsDto {
   @IsString()
@@ -66,4 +67,20 @@ export class CreateUserSettingsDto {
   @IsOptional()
   @IsString()
   separatorLogoUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  enableFacebookModule?: boolean;
+
+  @IsOptional()
+  @IsString()
+  selectedFacebookPage?: string;
+
+  @IsOptional()
+  @IsString()
+  facebookPageAccess?: string;
+
+  @IsOptional()
+  @IsString()
+  facebookPageId?: string;
 }

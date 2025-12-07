@@ -56,13 +56,18 @@ export class UserSettings extends Document {
   @Prop()
   separatorLogoUrl: string;
 
-@Prop()
-enableFacebookModule: boolean;
+  @Prop()
+  enableFacebookModule: boolean;
 
-@Prop()
-FbPageAccessToken: string;
+  @Prop()
+  selectedFacebookPage: string;
 
+  @Prop()
+  facebookPageAccess: string;
+
+  @Prop()
+  facebookPageId: string;
 }
+
 export const SettingsSchema = SchemaFactory.createForClass(UserSettings);
 
-// SettingsSchema.index({ tenant_id: 1 }, { unique: true });
