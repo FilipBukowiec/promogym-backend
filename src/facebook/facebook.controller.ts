@@ -23,4 +23,11 @@ export class FacebookController {
     );
     return this.facebookService.getStories(body.pageToken, body.pageId);
   }
+
+@Post('stories/random')
+  async getRandomStory(@Body() body: { pageToken: string; pageId: string }) {
+    console.log('Odebrano pageId dla losowej Story:', body.pageId);
+    return this.facebookService.getRandomStory(body.pageToken, body.pageId);
+  }
+
 }
