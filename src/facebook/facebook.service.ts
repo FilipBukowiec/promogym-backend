@@ -1,24 +1,62 @@
 import { HttpService } from '@nestjs/axios';
 import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { catchError, lastValueFrom, map } from 'rxjs';
 import { Page } from './page.model';
 import { Story } from './story.model';
+import axios from 'axios';
 
 @Injectable()
 export class FacebookService {
-  private GRAPH_URL = 'https://graph.facebook.com/v24.0';
+  private GRAPH_URL = 'https://graph.facebook.com/v24.0';
 
-  constructor(private readonly httpService: HttpService) {}
+  // --- ZMIENNE KONFIGURACYJNE (PAMIĘTAJ O ZASTĄPIENIU LUB UŻYCIU ConfigService) ---
+  private readonly APP_ID =process.env.FB_APP_ID
+  private readonly APP_SECRET = process.env.FB_APP_SECRET
+  // ---------------------------------------------------------------------------------
 
-  // --- 1. POBIERANIE STRON (NIEZMIENIONE) ---
-  // Zwraca listę stron, gdzie każdy obiekt Page zawiera Page Access Token (pageToken)
-  async getPages(userToken: string): Promise<Page[]> {
+  constructor(private readonly httpService: HttpService) {}
+
+  // -------------------------------------------------------------------------
+  // 0. METODA WYMIANY TOKENU (NOWA)
+  // -------------------------------------------------------------------------
+  async exchangeToken(shortLivedToken: string): Promise<string> {
+    try {
+      const url = `${this.GRAPH_URL}/oauth/access_token`;
+
+      const response = await axios.get(url, {
+        params: {
+          grant_type: 'fb_exchange_token',
+          client_id: this.APP_ID,
+          client_secret: this.APP_SECRET,
+          fb_exchange_token: shortLivedToken,
+        },
+      });
+
+      if (!response.data.access_token) {
+        throw new Error('Brak access_token w odpowiedzi.');
+      }
+      return response.data.access_token;
+    } catch (error) {
+      console.error(
+        '❌ Błąd wymiany tokenu Facebooka:',
+        error.response?.data?.error?.message || error.message,
+      );
+      throw new UnauthorizedException(
+        'Nie udało się wymienić tokenu użytkownika na długotrwały.',
+      );
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 1. POBIERANIE STRON (KORZYSTA Z DŁUGOTRWAŁEGO TOKENU UŻYTKOWNIKA)
+  // -------------------------------------------------------------------------
+  async getPages(userToken: string): Promise<Page[]> {
     const url = `${this.GRAPH_URL}/me/accounts`;
     try {
       return await lastValueFrom(
@@ -37,15 +75,15 @@ export class FacebookService {
               return pagesArray.map((page: any) => ({
                 id: page.id,
                 name: page.name,
-                // KLUCZ: Ten token to Long-Lived Page Token (ok. 60 dni)
-                page_token: page.access_token, 
+                // Ten token jest DŁUGOTRWAŁY, jeśli userToken był DŁUGOTRWAŁY.
+                page_token: page.access_token,
                 category: page.category,
                 link: page.link,
               })) as Page[];
             }),
             catchError(() => {
               throw new HttpException(
-                'Błąd pobierania kont FB.',
+                'Błąd pobierania kont FB. Sprawdź, czy używasz długotrwałego tokenu.',
                 HttpStatus.UNAUTHORIZED,
               );
             }),
@@ -54,13 +92,15 @@ export class FacebookService {
     } catch (error) {
       throw error;
     }
-  }
-  
-// -------------------------------------------------------------------------
-// 2. METODA POMOCNICZA: POBIERANIE STORIES Z FACEBOOKA (TYLKO WIDEO)
-// -------------------------------------------------------------------------
-private async getFacebookStories(pageId: string, pageToken: string): Promise<Story[]> {
-    // 💡 Używamy Page Token do autoryzacji
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. METODA POMOCNICZA: POBIERANIE STORIES Z FACEBOOKA (TYLKO WIDEO)
+  // -------------------------------------------------------------------------
+  private async getFacebookStories(
+    pageId: string,
+    pageToken: string,
+  ): Promise<Story[]> {
     const token = pageToken;
     try {
       const storiesRes = await lastValueFrom(
@@ -68,8 +108,7 @@ private async getFacebookStories(pageId: string, pageToken: string): Promise<Sto
           params: {
             access_token: token,
             status: 'PUBLISHED',
-            // Żądamy pól tylko dla typów, które działają (WIDEO)
-            fields: 'id,media_id,media_type', 
+            fields: 'id,media_id,media_type',
           },
         }),
       );
@@ -77,17 +116,17 @@ private async getFacebookStories(pageId: string, pageToken: string): Promise<Sto
       const stories = storiesRes.data.data;
       if (!stories || stories.length === 0) return [];
 
-      // Filtrujemy tylko to, co wiemy, że może zadziałać: WIDEO z media_id
-      const videoStories = stories.filter(s => s.media_type === 'video' && s.media_id);
+      const videoStories = stories.filter(
+        (s) => s.media_type === 'video' && s.media_id,
+      );
 
-      // Używamy Promise.all dla równoległego pobierania detali (lepsza odporność na błędy 400)
       const mediaPromises = videoStories.map(async (story) => {
         try {
           const mediaRes = await lastValueFrom(
             this.httpService.get(`${this.GRAPH_URL}/${story.media_id}`, {
-              params: { 
-                fields: 'source', 
-                access_token: token // Używamy Page Token
+              params: {
+                fields: 'source',
+                access_token: token,
               },
             }),
           );
@@ -102,103 +141,112 @@ private async getFacebookStories(pageId: string, pageToken: string): Promise<Sto
             } as Story;
           }
         } catch (error) {
-          console.error(`❌ Błąd FB media (video) dla ${story.media_id}:`, error.response?.data?.error?.message || error.message);
+          console.error(
+            `❌ Błąd FB media (video) dla ${story.media_id}:`,
+            error.response?.data?.error?.message || error.message,
+          );
         }
-        return null; 
+        return null;
       });
 
       const processed = await Promise.all(mediaPromises);
       return processed.filter((s): s is Story => s !== null);
-
     } catch (error) {
-      console.error('❌ FB Error getFacebookStories (główne zapytanie):', error.response?.data?.error?.message || error.message);
+      console.error(
+        '❌ FB Error getFacebookStories (główne zapytanie):',
+        error.response?.data?.error?.message || error.message,
+      );
       return [];
     }
-}
+  }
 
-
-// -------------------------------------------------------------------------
-// 3. METODA POMOCNICZA: POBIERANIE STORIES Z INSTAGRAMA (ZDJĘCIA + WIDEO)
-// -------------------------------------------------------------------------
-private async getInstagramStories(pageId: string, pageToken: string): Promise<Story[]> {
-    // 💡 Używamy Page Token do autoryzacji
+  // -------------------------------------------------------------------------
+  // 3. METODA POMOCNICZA: POBIERANIE STORIES Z INSTAGRAMA (ZDJĘCIA + WIDEO)
+  // -------------------------------------------------------------------------
+  private async getInstagramStories(
+    pageId: string,
+    pageToken: string,
+  ): Promise<Story[]> {
     const token = pageToken;
     try {
-        // Krok 1: Znajdź ID konta Instagram Business powiązanego ze stroną FB
-        const igRes = await lastValueFrom(
-            this.httpService.get(`${this.GRAPH_URL}/${pageId}`, {
-                params: {
-                    fields: 'instagram_business_account',
-                    access_token: token,
-                },
-            }),
-        );
+      // Krok 1: Znajdź ID konta Instagram Business powiązanego ze stroną FB
+      const igRes = await lastValueFrom(
+        this.httpService.get(`${this.GRAPH_URL}/${pageId}`, {
+          params: {
+            fields: 'instagram_business_account',
+            access_token: token,
+          },
+        }),
+      );
 
-        const igAccountId = igRes.data.instagram_business_account?.id;
-        if (!igAccountId) return [];
-        
-        // Krok 2: Pobierz Story z konta Instagram Business
-        const storiesRes = await lastValueFrom(
-            this.httpService.get(`${this.GRAPH_URL}/${igAccountId}/stories`, {
-                params: {
-                    // IG API jest niezawodne i zwraca media_url w jednym zapytaniu
-                    fields: 'id,media_type,media_url,thumbnail_url', 
-                    access_token: token,
-                },
-            }),
-        );
+      const igAccountId = igRes.data.instagram_business_account?.id;
+      if (!igAccountId) return [];
 
-        return (storiesRes.data.data || [])
-            .map((story) => {
-                // Jeśli nie ma media_url, pomijamy (np. Stories z interaktywnymi naklejkami)
-                if (!story.media_url) return null; 
+      // Krok 2: Pobierz Story z konta Instagram Business
+      const storiesRes = await lastValueFrom(
+        this.httpService.get(`${this.GRAPH_URL}/${igAccountId}/stories`, {
+          params: {
+            fields: 'id,media_type,media_url,thumbnail_url',
+            access_token: token,
+          },
+        }),
+      );
 
-                const mediaType = story.media_type === 'VIDEO' ? 'video' : 'photo';
-                
-                return {
-                    mediaType: mediaType,
-                    mediaUrl: story.media_url,
-                    source: 'instagram',
-                } as Story;
-            })
-            .filter((s): s is Story => s !== null);
+      return (storiesRes.data.data || [])
+        .map((story) => {
+          if (!story.media_url) return null;
 
+          const mediaType = story.media_type === 'VIDEO' ? 'video' : 'photo';
+
+          return {
+            mediaType: mediaType,
+            mediaUrl: story.media_url,
+            source: 'instagram',
+          } as Story;
+        })
+        .filter((s): s is Story => s !== null);
     } catch (error) {
-        console.error('❌ IG Error getInstagramStories:', error.response?.data?.error?.message || error.message);
-        return [];
+      console.error(
+        '❌ IG Error getInstagramStories:',
+        error.response?.data?.error?.message || error.message,
+      );
+      return [];
     }
-}
+  }
 
-
-// -------------------------------------------------------------------------
-// 4. METODA GŁÓWNA: ŁĄCZENIE FB + IG
-// -------------------------------------------------------------------------
-async getStories(pageToken: string, pageId: string): Promise<Story[]> {
+  // -------------------------------------------------------------------------
+  // 4. METODA GŁÓWNA: ŁĄCZENIE FB + IG
+  // -------------------------------------------------------------------------
+  async getStories(pageToken: string, pageId: string): Promise<Story[]> {
     if (!pageToken || !pageId) {
-        throw new UnauthorizedException('Brak Page Token lub ID strony.');
+      throw new UnauthorizedException('Brak Page Token lub ID strony.');
     }
 
     try {
-        // Równoległe pobieranie z obu źródeł
-        const [fbStories, igStories] = await Promise.all([
-             this.getFacebookStories(pageId, pageToken),
-             this.getInstagramStories(pageId, pageToken),
-        ]);
-        
-        const allStories = [...fbStories, ...igStories];
+      const [fbStories, igStories] = await Promise.all([
+        this.getFacebookStories(pageId, pageToken),
+        this.getInstagramStories(pageId, pageToken),
+      ]);
 
-        console.log(`✅ Pobrano: ${fbStories.length} z FB, ${igStories.length} z IG. Razem: ${allStories.length}`);
-        
-        return allStories;
+      const allStories = [...fbStories, ...igStories];
+
+      console.log(
+        `✅ Pobrano: ${fbStories.length} z FB, ${igStories.length} z IG. Razem: ${allStories.length}`,
+      );
+
+      return allStories;
     } catch (e) {
-        throw new InternalServerErrorException('Błąd łączenia Stories.');
+      throw new InternalServerErrorException('Błąd łączenia Stories.');
     }
-}
-// Metoda getRandomStory korzysta z metody getStories
-async getRandomStory(pageToken: string, pageId: string): Promise<Story | null> {
-    const allStories = await this.getStories(pageToken, pageId);
-    if (!allStories || allStories.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * allStories.length);
-    return allStories[randomIndex];
-}
+  }
+
+  // -------------------------------------------------------------------------
+  // 5. METODA POBIERANIA LOSOWEGO STORIES
+  // -------------------------------------------------------------------------
+  async getRandomStory(pageToken: string, pageId: string): Promise<Story | null> {
+    const allStories = await this.getStories(pageToken, pageId);
+    if (!allStories || allStories.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * allStories.length);
+    return allStories[randomIndex];
+  }
 }
