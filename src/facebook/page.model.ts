@@ -12,9 +12,6 @@ export class Page {
   name: string;
 
   @Prop({ required: true })
-  category: string;
-
-  @Prop({ required: true })
   page_token: string;
 
   @Prop({ required: true })

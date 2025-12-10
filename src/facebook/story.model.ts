@@ -8,10 +8,12 @@ export type StoryDocument = Story & Document;
 @Schema()
 export class Story {
   @Prop({ required: true })
-  mediaType: 'photo' | 'video';
+  fileType: 'photo' | 'video'
 
   @Prop({ required: true })
-  mediaUrl: string;
+  filePath: string;
+
+
 }
 
 export const StorySchema = SchemaFactory.createForClass(Story);
