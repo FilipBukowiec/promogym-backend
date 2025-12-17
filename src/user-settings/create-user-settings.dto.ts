@@ -73,6 +73,10 @@ export class CreateUserSettingsDto {
   enableFacebookModule?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  includeSharedStories?: boolean;
+  
+  @IsOptional()
   @IsString()
   selectedFacebookPage?: string;
 
@@ -86,5 +90,5 @@ export class CreateUserSettingsDto {
 
   @IsOptional()
   @IsString()
-  facebookPageAdress?: string
+  facebookPageAdress?: string;
 }

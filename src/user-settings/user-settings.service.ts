@@ -110,6 +110,8 @@ export class UserSettingsService {
       updateSettingsDto.mainLogoUrl ?? settings.mainLogoUrl;
     settings.enableFacebookModule =
       updateSettingsDto.enableFacebookModule ?? settings.enableFacebookModule;
+    settings.includeSharedStories =
+      updateSettingsDto.includeSharedStories ?? settings.includeSharedStories;
     settings.selectedFacebookPage =
       updateSettingsDto.selectedFacebookPage ?? settings.selectedFacebookPage;
     settings.facebookPageAccess =

@@ -12,37 +12,40 @@ export class FacebookController {
       return [];
     }
 
-    console.log('Odebrano krótki UserToken. Rozpoczynam wymianę na długotrwały...');
-
-    // 1. WYMIANA TOKENU
-    // Zamień krótkotrwały token użytkownika na Długotrwały Token Użytkownika (60 dni)
-    const longLivedUserToken = await this.facebookService.exchangeToken(
-      body.userToken,
-    );
+    console.log('Odebrano krótki UserToken. Rozpoczynam wymianę...');
+    const longLivedUserToken = await this.facebookService.exchangeToken(body.userToken);
 
     console.log('✅ Token wymieniony. Pobieram strony...');
-
-    // 2. POBRANIE STRON
-    // Użyj Długotrwałego Tokenu Użytkownika do pobrania stron.
-    // Zwrócone Tokeny Stron (Page Tokens) również będą długotrwałe.
     return this.facebookService.getPages(longLivedUserToken);
   }
 
   @Post('stories')
-  async getStories(@Body() body: { pageToken: string; pageId: string }) {
+  async getStories(@Body() body: { pageToken: string; pageId: string; includeShared?: boolean }) {
     console.log('Odebrano pageId:', body.pageId);
-    console.log(
-      'Odebrano pageToken:',
-      body.pageToken ? 'Jest token' : 'Brak tokenu!',
+    
+    // Pobieramy wartość z body, jeśli jej nie ma (np. stary frontend) - domyślnie true
+    const includeShared = body.includeShared !== false; 
+
+    console.log(`Pobieram stories (includeShared: ${includeShared})`);
+    
+    return this.facebookService.getStories(
+      body.pageToken, 
+      body.pageId, 
+      includeShared // Przekazujemy 3 argument do serwisu
     );
-    // Używasz tutaj Page Token, który jest teraz Długotrwały (z 'getPages').
-    return this.facebookService.getStories(body.pageToken, body.pageId);
   }
 
   @Post('stories/random')
-  async getRandomStory(@Body() body: { pageToken: string; pageId: string }) {
+  async getRandomStory(@Body() body: { pageToken: string; pageId: string; includeShared?: boolean }) {
     console.log('Odebrano pageId dla losowej Story:', body.pageId);
-    // Używasz Page Token, który jest teraz Długotrwały.
-    return this.facebookService.getRandomStory(body.pageToken, body.pageId);
+
+    // Podobnie jak wyżej, obsługujemy opcjonalny parametr
+    const includeShared = body.includeShared !== false;
+
+    return this.facebookService.getRandomStory(
+      body.pageToken, 
+      body.pageId, 
+      includeShared // Przekazujemy 3 argument do serwisu
+    );
   }
 }

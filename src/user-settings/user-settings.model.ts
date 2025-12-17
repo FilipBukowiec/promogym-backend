@@ -60,6 +60,9 @@ export class UserSettings extends Document {
   enableFacebookModule: boolean;
 
   @Prop()
+  includeSharedStories: boolean;
+
+  @Prop()
   selectedFacebookPage: string;
 
   @Prop()
