@@ -169,14 +169,14 @@ export class FacebookService {
   }
 
   // 4. METODA GŁÓWNA
-  async getStories(pageToken: string, pageId: string, includeShared: boolean = false): Promise<Story[]> {
+  async getStories(pageToken: string, pageId: string, includeSharedStories: boolean = false): Promise<Story[]> {
     if (!pageToken || !pageId) {
       throw new UnauthorizedException('Brak Page Token lub ID strony.');
     }
 
     try {
       const [fbStories, igStories] = await Promise.all([
-        this.getFacebookStories(pageId, pageToken, includeShared),
+        this.getFacebookStories(pageId, pageToken, includeSharedStories),
         this.getInstagramStories(pageId, pageToken),
       ]);
 
@@ -187,8 +187,8 @@ export class FacebookService {
   }
 
   // 5. LOSOWANIE
-  async getRandomStory(pageToken: string, pageId: string, includeShared: boolean = false): Promise<Story | null> {
-    const allStories = await this.getStories(pageToken, pageId, includeShared);
+  async getRandomStory(pageToken: string, pageId: string, includeSharedStories: boolean = false): Promise<Story | null> {
+    const allStories = await this.getStories(pageToken, pageId, includeSharedStories);
     if (!allStories || allStories.length === 0) return null;
     const randomIndex = Math.floor(Math.random() * allStories.length);
     return allStories[randomIndex];

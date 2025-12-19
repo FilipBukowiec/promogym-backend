@@ -20,32 +20,39 @@ export class FacebookController {
   }
 
   @Post('stories')
-  async getStories(@Body() body: { pageToken: string; pageId: string; includeShared?: boolean }) {
+  async getStories(
+    @Body() body: { pageToken: string; pageId: string; includeSharedStories?: boolean }
+  ) {
     console.log('Odebrano pageId:', body.pageId);
     
-    // Pobieramy wartość z body, jeśli jej nie ma (np. stary frontend) - domyślnie true
-    const includeShared = body.includeShared !== false; 
+    // POPRAWKA: Używamy dokładnej nazwy pola z frontendu (includeSharedStories)
+    // oraz bezpiecznego porównania. Tylko jawne 'true' włączy tę opcję.
+    const includeShared = body.includeSharedStories === true; 
 
     console.log(`Pobieram stories (includeShared: ${includeShared})`);
     
     return this.facebookService.getStories(
       body.pageToken, 
       body.pageId, 
-      includeShared // Przekazujemy 3 argument do serwisu
+      includeShared 
     );
   }
 
   @Post('stories/random')
-  async getRandomStory(@Body() body: { pageToken: string; pageId: string; includeShared?: boolean }) {
+  async getRandomStory(
+    @Body() body: { pageToken: string; pageId: string; includeSharedStories?: boolean }
+  ) {
     console.log('Odebrano pageId dla losowej Story:', body.pageId);
 
-    // Podobnie jak wyżej, obsługujemy opcjonalny parametr
-    const includeShared = body.includeShared !== false;
+    // POPRAWKA: To samo co wyżej - bezpieczne przypisanie
+    const includeShared = body.includeSharedStories === true;
+
+    console.log(`Losuję story (includeShared: ${includeShared})`);
 
     return this.facebookService.getRandomStory(
       body.pageToken, 
       body.pageId, 
-      includeShared // Przekazujemy 3 argument do serwisu
+      includeShared 
     );
   }
 }
