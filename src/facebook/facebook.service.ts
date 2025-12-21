@@ -21,7 +21,6 @@ export class FacebookService {
 
   constructor(private readonly httpService: HttpService) {}
 
-  // 0. WYMIANA TOKENU
   async exchangeToken(shortLivedToken: string): Promise<string> {
     try {
       const url = `${this.GRAPH_URL}/oauth/access_token`;
@@ -40,7 +39,6 @@ export class FacebookService {
     }
   }
 
-  // 1. POBIERANIE STRON
   async getPages(userToken: string): Promise<Page[]> {
     const url = `${this.GRAPH_URL}/me/accounts`;
     return await lastValueFrom(
@@ -65,11 +63,11 @@ export class FacebookService {
     );
   }
 
-  // 2. POMOCNICZA: FB STORIES
+
   private async getFacebookStories(
     pageId: string,
     pageToken: string,
-    includeShared: boolean = false, // Argument sterujący
+    includeShared: boolean = false, 
   ): Promise<Story[]> {
     try {
       const storiesRes = await lastValueFrom(
@@ -77,15 +75,13 @@ export class FacebookService {
           params: {
             access_token: pageToken,
             status: 'PUBLISHED',
-            fields: 'id,media_id,media_type,is_shared_post', // Pobieramy flagę udostępnienia
+            fields: 'id,media_id,media_type,is_shared_post', 
           },
         }),
       );
 
       let stories = storiesRes.data.data || [];
 
-      // --- LOGIKA CHECKBOXA ---
-      // Jeśli checkbox "includeShared" jest ODZNACZONY (false), filtrujemy
       if (!includeShared) {
         stories = stories.filter((s: any) => s.is_shared_post !== true);
       }
@@ -133,7 +129,6 @@ export class FacebookService {
     }
   }
 
-  // 3. POMOCNICZA: IG STORIES
   private async getInstagramStories(pageId: string, pageToken: string): Promise<Story[]> {
     try {
       const igRes = await lastValueFrom(
@@ -168,7 +163,6 @@ export class FacebookService {
     }
   }
 
-  // 4. METODA GŁÓWNA
   async getStories(pageToken: string, pageId: string, includeSharedStories: boolean = false): Promise<Story[]> {
     if (!pageToken || !pageId) {
       throw new UnauthorizedException('Brak Page Token lub ID strony.');
@@ -186,7 +180,6 @@ export class FacebookService {
     }
   }
 
-  // 5. LOSOWANIE
   async getRandomStory(pageToken: string, pageId: string, includeSharedStories: boolean = false): Promise<Story | null> {
     const allStories = await this.getStories(pageToken, pageId, includeSharedStories);
     if (!allStories || allStories.length === 0) return null;

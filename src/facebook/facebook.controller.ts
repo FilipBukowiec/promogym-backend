@@ -25,8 +25,6 @@ export class FacebookController {
   ) {
     console.log('Odebrano pageId:', body.pageId);
     
-    // POPRAWKA: Używamy dokładnej nazwy pola z frontendu (includeSharedStories)
-    // oraz bezpiecznego porównania. Tylko jawne 'true' włączy tę opcję.
     const includeShared = body.includeSharedStories === true; 
 
     console.log(`Pobieram stories (includeShared: ${includeShared})`);
@@ -44,7 +42,6 @@ export class FacebookController {
   ) {
     console.log('Odebrano pageId dla losowej Story:', body.pageId);
 
-    // POPRAWKA: To samo co wyżej - bezpieczne przypisanie
     const includeShared = body.includeSharedStories === true;
 
     console.log(`Losuję story (includeShared: ${includeShared})`);
