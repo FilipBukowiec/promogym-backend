@@ -15,6 +15,7 @@ import { NewsModule } from './news/news.module';
 import { SentencesModule } from './sentences/sentences.module';
 import { SettingsModule } from './user-settings/user-settings.module';
 import { UserModule } from './user/user.module';
+import { FacebookModule } from './facebook/facebook.module';
 
 @Module({
   imports: [
@@ -41,8 +42,9 @@ import { UserModule } from './user/user.module';
     ContactModule,
     LibraryModule,
     SentencesModule,
+    FacebookModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

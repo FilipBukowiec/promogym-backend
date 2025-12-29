@@ -10,7 +10,7 @@ export class UserSettingsService {
   constructor(
     @InjectModel(UserSettings.name)
     private userSettingsModel: Model<UserSettings>,
-  ) { }
+  ) {}
 
   // Pobieranie ustawień dla danego tenant_id
   async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
@@ -29,43 +29,49 @@ export class UserSettingsService {
     return settings;
   }
 
-
-
   // Tworzenie nowych ustawień dla danego tenant_id
-async createDefaultSettings(
-  tenant_id: string,
-  country: string,
-): Promise<UserSettings> {
-  const defaultSettings: CreateUserSettingsDto = {
-    tenant_id,
-    language: 'ENG',
-    country,
-    name: tenant_id,
-    selectedRadioStream: '',
-    footerVisibilityRules: [],
-    pictureSlideDuration: 15,
-    logoFilePath: '',
-    separatorFilePath: '',
-  };
+  async createDefaultSettings(
+    tenant_id: string,
+    country: string,
+  ): Promise<UserSettings> {
+    const defaultSettings: CreateUserSettingsDto = {
+      tenant_id,
+      language: 'ENG',
+      country,
+      name: tenant_id,
+      selectedRadioStream: '',
+      footerVisibilityRules: [],
+      pictureSlideDuration: 15,
+      logoFilePath: '',
+      separatorFilePath: '',
+      enableFacebookModule: false,
+      selectedFacebookPage: '',
+      facebookPageAccess: '',
+      facebookPageId: '',
+      facebookPageAdress: '',
+    };
 
     try {
-    const settings = await this.userSettingsModel.findOneAndUpdate(
-      { tenant_id },
-      { $setOnInsert: defaultSettings },
-      { new: true, upsert: true }
-    ).exec();
-    return settings!;
-  } catch (err: any) {
-    // 11000 to kod Mongo dla duplikatu
-    if (err.code === 11000) {
-      // Znajdź istniejący dokument i zwróć
-      return await this.userSettingsModel.findOne({ tenant_id }).exec() as UserSettings;
+      const settings = await this.userSettingsModel
+        .findOneAndUpdate(
+          { tenant_id },
+          { $setOnInsert: defaultSettings },
+          { new: true, upsert: true },
+        )
+        .exec();
+      return settings!;
+    } catch (err: any) {
+      // 11000 to kod Mongo dla duplikatu
+      if (err.code === 11000) {
+        // Znajdź istniejący dokument i zwróć
+        return (await this.userSettingsModel
+          .findOne({ tenant_id })
+          .exec()) as UserSettings;
+      }
+      throw err;
     }
-    throw err;
   }
-}
 
- 
   async updateSettingsForTenant(
     tenant_id: string,
     country: string,
@@ -102,6 +108,18 @@ async createDefaultSettings(
       updateSettingsDto.separatorFileType ?? settings.separatorFileType;
     settings.mainLogoUrl =
       updateSettingsDto.mainLogoUrl ?? settings.mainLogoUrl;
+    settings.enableFacebookModule =
+      updateSettingsDto.enableFacebookModule ?? settings.enableFacebookModule;
+    settings.includeSharedStories =
+      updateSettingsDto.includeSharedStories ?? settings.includeSharedStories;
+    settings.selectedFacebookPage =
+      updateSettingsDto.selectedFacebookPage ?? settings.selectedFacebookPage;
+    settings.facebookPageAccess =
+      updateSettingsDto.facebookPageAccess ?? settings.facebookPageAccess;
+    settings.facebookPageId =
+      updateSettingsDto.facebookPageId ?? settings.facebookPageId;
+    settings.facebookPageAdress =
+      updateSettingsDto.facebookPageAdress ?? settings.facebookPageAdress;
 
     console.log('Nowe ustawienie country:', settings.country);
 
