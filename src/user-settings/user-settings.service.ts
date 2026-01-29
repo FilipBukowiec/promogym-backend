@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as fs from 'fs';
+import * as path from 'path';
 import { UserSettings } from './user-settings.model';
 import { CreateUserSettingsDto } from './create-user-settings.dto';
 import { UpdateUserSettingsDto } from './update-user-settings.dto';
@@ -12,28 +14,27 @@ export class UserSettingsService {
     private userSettingsModel: Model<UserSettings>,
   ) {}
 
-  // Pobieranie ustawień dla danego tenant_id
+  // Pomocnicza metoda do wyliczania pełnej ścieżki do pliku na dysku
+  private getPhysicalPath(relativePath: string): string {
+    if (!relativePath) return '';
+    const basePath = process.env.NODE_ENV === 'production'
+      ? path.join(__dirname, '..', '..', '..', 'public_html')
+      : path.join(__dirname, '..', '..', 'public_html');
+    return path.join(basePath, relativePath);
+  }
+
   async getSettingsForTenant(tenant_id: string): Promise<UserSettings> {
-    console.log('Pobieram ustawienia dla tenant_id:', tenant_id); // Logowanie tenant_id
-
-    // Szukamy ustawień dla danego tenant_id
+    console.log('Pobieram ustawienia dla tenant_id:', tenant_id);
     const settings = await this.userSettingsModel.findOne({ tenant_id }).exec();
-
     if (!settings) {
-      console.log(`Nie znaleziono ustawień dla tenant_id: ${tenant_id}`); // Logowanie w przypadku, gdy nie znaleziono ustawień
+      console.log(`Nie znaleziono ustawień dla tenant_id: ${tenant_id}`);
       throw new NotFoundException('Settings not found');
     }
-
-    console.log(`Znaleziono ustawienia dla tenant_id: ${tenant_id}`, settings); // Logowanie znalezionych ustawień
-
+    console.log(`Znaleziono ustawienia dla tenant_id: ${tenant_id}`, settings);
     return settings;
   }
 
-  // Tworzenie nowych ustawień dla danego tenant_id
-  async createDefaultSettings(
-    tenant_id: string,
-    country: string,
-  ): Promise<UserSettings> {
+  async createDefaultSettings(tenant_id: string, country: string): Promise<UserSettings> {
     const defaultSettings: CreateUserSettingsDto = {
       tenant_id,
       language: 'ENG',
@@ -61,12 +62,8 @@ export class UserSettingsService {
         .exec();
       return settings!;
     } catch (err: any) {
-      // 11000 to kod Mongo dla duplikatu
       if (err.code === 11000) {
-        // Znajdź istniejący dokument i zwróć
-        return (await this.userSettingsModel
-          .findOne({ tenant_id })
-          .exec()) as UserSettings;
+        return (await this.userSettingsModel.findOne({ tenant_id }).exec()) as UserSettings;
       }
       throw err;
     }
@@ -84,42 +81,37 @@ export class UserSettingsService {
 
     console.log('Aktualne ustawienia:', settings);
 
+    // --- LOGIKA PODMIANY PLIKÓW (USUWANIE STARYCH Z DYSKU) ---
+    if (updateSettingsDto.logoFilePath && settings.logoFilePath && updateSettingsDto.logoFilePath !== settings.logoFilePath) {
+      const oldPath = this.getPhysicalPath(settings.logoFilePath);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+    if (updateSettingsDto.separatorFilePath && settings.separatorFilePath && updateSettingsDto.separatorFilePath !== settings.separatorFilePath) {
+      const oldPath = this.getPhysicalPath(settings.separatorFilePath);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    // Twoje oryginalne przypisania
     settings.language = updateSettingsDto.language ?? settings.language;
     settings.country = updateSettingsDto.country ?? settings.country;
     settings.name = updateSettingsDto.name ?? settings.name;
-    settings.selectedRadioStream =
-      updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
-    settings.footerVisibilityRules =
-      updateSettingsDto.footerVisibilityRules ?? settings.footerVisibilityRules;
-    settings.pictureSlideDuration =
-      updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;
+    settings.selectedRadioStream = updateSettingsDto.selectedRadioStream ?? settings.selectedRadioStream;
+    settings.footerVisibilityRules = updateSettingsDto.footerVisibilityRules ?? settings.footerVisibilityRules;
+    settings.pictureSlideDuration = updateSettingsDto.pictureSlideDuration ?? settings.pictureSlideDuration;
     settings.country = country || settings.country;
-    settings.logoFileName =
-      updateSettingsDto.logoFileName ?? settings.logoFileName;
-    settings.logoFilePath =
-      updateSettingsDto.logoFilePath ?? settings.logoFilePath;
-    settings.logoFileType =
-      updateSettingsDto.logoFileType ?? settings.logoFileType;
-    settings.separatorFileName =
-      updateSettingsDto.separatorFileName ?? settings.separatorFileName;
-    settings.separatorFilePath =
-      updateSettingsDto.separatorFilePath ?? settings.separatorFilePath;
-    settings.separatorFileType =
-      updateSettingsDto.separatorFileType ?? settings.separatorFileType;
-    settings.mainLogoUrl =
-      updateSettingsDto.mainLogoUrl ?? settings.mainLogoUrl;
-    settings.enableFacebookModule =
-      updateSettingsDto.enableFacebookModule ?? settings.enableFacebookModule;
-    settings.includeSharedStories =
-      updateSettingsDto.includeSharedStories ?? settings.includeSharedStories;
-    settings.selectedFacebookPage =
-      updateSettingsDto.selectedFacebookPage ?? settings.selectedFacebookPage;
-    settings.facebookPageAccess =
-      updateSettingsDto.facebookPageAccess ?? settings.facebookPageAccess;
-    settings.facebookPageId =
-      updateSettingsDto.facebookPageId ?? settings.facebookPageId;
-    settings.facebookPageAdress =
-      updateSettingsDto.facebookPageAdress ?? settings.facebookPageAdress;
+    settings.logoFileName = updateSettingsDto.logoFileName ?? settings.logoFileName;
+    settings.logoFilePath = updateSettingsDto.logoFilePath ?? settings.logoFilePath;
+    settings.logoFileType = updateSettingsDto.logoFileType ?? settings.logoFileType;
+    settings.separatorFileName = updateSettingsDto.separatorFileName ?? settings.separatorFileName;
+    settings.separatorFilePath = updateSettingsDto.separatorFilePath ?? settings.separatorFilePath;
+    settings.separatorFileType = updateSettingsDto.separatorFileType ?? settings.separatorFileType;
+    settings.mainLogoUrl = updateSettingsDto.mainLogoUrl ?? settings.mainLogoUrl;
+    settings.enableFacebookModule = updateSettingsDto.enableFacebookModule ?? settings.enableFacebookModule;
+    settings.includeSharedStories = updateSettingsDto.includeSharedStories ?? settings.includeSharedStories;
+    settings.selectedFacebookPage = updateSettingsDto.selectedFacebookPage ?? settings.selectedFacebookPage;
+    settings.facebookPageAccess = updateSettingsDto.facebookPageAccess ?? settings.facebookPageAccess;
+    settings.facebookPageId = updateSettingsDto.facebookPageId ?? settings.facebookPageId;
+    settings.facebookPageAdress = updateSettingsDto.facebookPageAdress ?? settings.facebookPageAdress;
 
     console.log('Nowe ustawienie country:', settings.country);
 
@@ -129,18 +121,8 @@ export class UserSettingsService {
 
   async getAllTenants(): Promise<{ tenant_id: string; country: string }[]> {
     const tenants = await this.userSettingsModel.aggregate([
-      {
-        $group: {
-          _id: { tenant_id: '$tenant_id', country: '$country' },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          tenant_id: '$_id.tenant_id',
-          country: '$_id.country',
-        },
-      },
+      { $group: { _id: { tenant_id: '$tenant_id', country: '$country' } } },
+      { $project: { _id: 0, tenant_id: '$_id.tenant_id', country: '$_id.country' } },
     ]);
     return tenants;
   }
